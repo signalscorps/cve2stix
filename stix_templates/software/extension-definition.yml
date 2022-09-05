@@ -1,0 +1,12 @@
+# DO NOT MODIFY THIS FILE
+
+id: "extension-definition--ed0403c8-ba45-4b36-bcb7-906d2bc3efa9"
+type: "extension-definition"
+spec_version: "2.1"
+name: "NVD CPEs"
+schema: "https://nvd.nist.gov/Products/CPE"
+description: "This schema adds full CPE information to Software Objects"
+created: "2022-01-01T00:00:00.000Z"
+modified: "2022-01-01T00:00:00.000Z"
+version: "1.0"
+extension_types: [ "property-extension" ]
