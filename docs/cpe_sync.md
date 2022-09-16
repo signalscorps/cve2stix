@@ -190,10 +190,10 @@ cve2stix constructs Software SCOs for CPEs as follows;
       "cpe": "<cpes.titles.cpe23Uri>",  
       "version": "<cpes.titles.cpe23Uri[version_section]>",
       "vendor": "<cpes.titles.cpe23Uri[vendor_section]>",
-      "languages": "<cpes.titles.lang>",
+      "languages": ["<cpes.titles.lang>"],
       "revoked": "<cpes.deprecated>",
       "extensions": {
-        "extension-definition--ed0403c8-ba45-4b36-bcb7-906d2bc3efa9": {
+        "extension-definition--94f4bdb6-7f39-4d0a-b103-f787026963a6": {
             "extension_type": "property-extension",
             "PRINTED JSON CPE FIELDS"
         }
