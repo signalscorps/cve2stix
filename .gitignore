@@ -137,3 +137,6 @@ venv
 
 # Ignore credential.yml
 credentials.yml
+
+# Ignore TODO.txt
+TODO.txt
