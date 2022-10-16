@@ -8,11 +8,11 @@ __appname__ = "cve2stix"
 
 # Setup logger for file2stix
 logger = logging.getLogger(__name__)
-logger.setLevel(logging.INFO)
+logger.setLevel(logging.DEBUG)
 
 # Customize console logging
 ch = logging.StreamHandler()  # Logger output will be output to stderr
-ch.setLevel(logging.INFO)
+ch.setLevel(logging.DEBUG)
 formatter = logging.Formatter("[%(asctime)s] %(levelname)s: %(message)s")
 ch.setFormatter(formatter)
 
