@@ -15,6 +15,12 @@ CREDENTIALS_FILE_PATH = REPO_FOLDER / "credentials.yml"
 @dataclass
 class Config:
     cve_backfill_start_date: datetime = None
+    cve_backfill_end_date: datetime = None
     api_key: str = None
 
+    # Constant configs, SHOULD NOT be changed
+
     nvd_cve_api_endpoint: str = "https://services.nvd.nist.gov/rest/json/cves/1.0/"
+    nvd_cpe_api_endpoint: str = "https://services.nvd.nist.gov/rest/json/cpes/1.0/"
+
+    results_per_page: int = 500

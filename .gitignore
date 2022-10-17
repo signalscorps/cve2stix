@@ -140,3 +140,6 @@ credentials.yml
 
 # Ignore TODO.txt
 TODO.txt
+
+# Ignore stix2_objects
+stix2_objects/
