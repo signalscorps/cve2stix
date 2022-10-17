@@ -16,19 +16,21 @@ The default backend is filesystem storage.
 
 When file2stix successfully executes and matches are detected two directories will be created;
 
-1. `stix2_objects/`
-	* `software`
-	* `indicator`
-	* `vulnerability`
-	* `extention-definition`
-	* `relationship`
-2. `stix2_reports/`
-	* `cves`
-		* `<CVE_ID>`
-			* Final STIX bundles containing all Objects linked to a CVE in one bundle (includes `software`, `indicator`, `vulnerability`, `extention-definition` and `relationship` Objects)
-	* `matches`
-		* `<MATCH_UUID>`
-			* Final STIX bundles containing all Objects linked to a CVE in one bundle (includes `software`, `indicator`, `vulnerability`, `extention-definition`, `sighting`, `observed-data` and `relationship` Objects)
+1. `<DOWNLOAD-SETTINGS-FILENAME>`
+	* `stix2_objects/`
+		* `software`
+		* `indicator`
+		* `vulnerability`
+		* `extention-definition`
+		* `relationship`
+2.`<DOWNLOAD-SETTINGS-FILENAME>`
+	* `stix2_reports/`
+		* `cves`
+			* `<CVE_ID>`
+				* Final STIX bundles containing all Objects linked to a CVE in one bundle (includes `software`, `indicator`, `vulnerability`, `extention-definition` and `relationship` Objects)
+		* `matches`
+			* `<MATCH_UUID>`
+				* Final STIX bundles containing all Objects linked to a CVE in one bundle (includes `software`, `indicator`, `vulnerability`, `extention-definition`, `sighting`, `observed-data` and `relationship` Objects)
 
 This backend is always used as the json files saved are used to populate other backends.
 
@@ -46,9 +48,9 @@ password: # optional, default if blank: ''
 
 The intialization script `/backends/arangodb/arangodb.py` configures the following in the ArangoDB instance;
 
-* 1x Database named `cve2stix`
-* 1x Document Collection in the `cve2stix` Database named `stix_objects`
-* 1x Edge Collection in the `cve2stix` Database named `stix_relationships`
+* 1x Database named `cve2stix-<DOWNLOAD-SETTINGS-FILENAME>`
+* 1x Document Collection in the `cve2stix-<DOWNLOAD-SETTINGS-FILENAME>` Database named `stix_objects`
+* 1x Edge Collection in the `cve2stix-<DOWNLOAD-SETTINGS-FILENAME>` Database named `stix_relationships`
 
 cve2stix stores files in each Collection as follows;
 

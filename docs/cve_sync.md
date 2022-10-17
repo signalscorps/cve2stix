@@ -118,11 +118,7 @@ Below you can see the fields from the CVE API Response that are mapped to the Vu
         },
         { 
           "source_name": "<CVE_Items.cve.references.reference_data.name.[n]>",
-          "source": "<CVE_Items.references.reference_data.refsource.[n]>",
           "url": "<CVE_Items.references.reference_data.url.[n]>",
-          "tags": [
-              "<CVE_Items.references.reference_data.tags.[n]>"
-          ]
         },
       ],
       "extensions": {
