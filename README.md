@@ -36,8 +36,11 @@ Where;
 
 * `--download-settings`: Is a `download-settings.yml` that follows the schema defind in `download-settings.yml.schema`, with fields as follows
 	* `--cve-id` (optional, default null): if you only want specific cves, use this flag to download the specific cve. Can be passed more than once.
-	* `--cve-earliest-publish-date` (optional, default; excecution time minus 6 months): the earliest publish date for CVEs returned
-	* `--cve-latest-publish-date` (optional, default; excecution time): the latest publish date for CVEs returned
+	* `--cve-earliest-publish-date` (optional, default; excecution time minus 6 months): the earliest publish date for CVEs returned (in [ISO](https://www.iso.org/iso-8601-date-and-time-format.html) format). For eg., 2022-01-24
+	* `--cve-latest-publish-date` (optional, default; excecution time): the latest publish date for CVEs returned (in [ISO](https://www.iso.org/iso-8601-date-and-time-format.html) format). For eg., 2022-01-24
+	* `--stix2-objects-folder` (optional, default: `stix2_objects`): path to a new or empty
+	folder for storing the downloaded CVEs (and CPEs). `cve2stix` will throw an error
+	if the folder is not empty.
 	* `--cpe-part` (optional, default; `*`): only downloads CVEs with CPE match strings that contain defined cpe part. More than one value can be passed, in which case are treated with logical OR.
 	* `--cpe-vendor` (optional, default; `*`): only downloads CVEs with CPE match strings that contain defined cpe vendor. More than one value can be passed, in which case are treated with logical OR.
 	* `--cpe-product` (optional, default; `*`): only downloads CVEs with CPE match strings that contain defined cpe product. More than one value can be passed, in which case are treated with logical OR.

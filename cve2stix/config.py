@@ -11,11 +11,13 @@ CVESTIX_FOLDER = Path(os.path.abspath(__file__)).parent
 REPO_FOLDER = CVESTIX_FOLDER.parent
 CREDENTIALS_FILE_PATH = REPO_FOLDER / "credentials.yml"
 
+STIX2_OBJECTS_FOLDER = os.path.abspath("stix2_objects")
 
 @dataclass
 class Config:
     cve_backfill_start_date: datetime = None
     cve_backfill_end_date: datetime = None
+    stix2_objects_folder: str = None
     api_key: str = None
 
     # Constant configs, SHOULD NOT be changed

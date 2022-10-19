@@ -1,8 +1,8 @@
 # See readme for details
 
-cve-id: 
-cve-earliest-publish-date:
-cve-latest-publish-date:
+cve-earliest-publish-date: 2022-08-01
+cve-latest-publish-date: 2022-10-01
+stix2-objects-folder:
 cpe-part: 
 cpe-vendor: 
 cpe-product:
