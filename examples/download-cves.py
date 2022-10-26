@@ -36,8 +36,8 @@ if os.path.exists(CREDENTIALS_FILE_PATH):
         except:
             pass
 
-cve_start_date = datetime(1999, 0, 0)
-cve_end_date = datetime(2000, 0, 0)
+cve_start_date = datetime(1999, 1, 1)
+cve_end_date = datetime(2000, 1, 1)
 
 for start_date in rrule.rrule(
     rrule.MONTHLY,
