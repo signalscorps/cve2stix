@@ -1,4 +1,8 @@
-on: workflow_dispatch
+on:
+  push:
+    branches:
+    - main
+    - beta-1
 
 jobs:
   first-time-cve-download:
