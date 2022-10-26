@@ -59,5 +59,5 @@ for start_date in rrule.rrule(
     repo = git.Repo(".")
     repo.git.add("--all")
     repo.git.commit(
-        "-m", f"Add CVEs from {start_date} to {end_date}", author="test_user@test.com"
+        "-m", f"Add CVEs from {start_date} to {end_date}", author="test_user test_user@test.com"
     )
