@@ -4,13 +4,14 @@ Helper methods for parsing results from NVD API
 
 from datetime import datetime
 import logging
-from stix2 import Vulnerability, Software
+from stix2 import Vulnerability, Software, Indicator
 
 logger = logging.getLogger(__name__)
 
 
 def parse_cve_api_response(cve_content):
     vulnerabilities = []
+    indicators = []
     for cve_item in cve_content["result"]["CVE_Items"]:
 
         try:
@@ -56,17 +57,32 @@ def parse_cve_api_response(cve_content):
                     }
                 ]
 
-            vulnerability = Vulnerability(**vulnerability_dict)
-            vulnerabilities.append(vulnerability)
+            indicator_dict = {
+                "created": datetime.strptime(
+                    cve_item["publishedDate"], "%Y-%m-%dT%H:%MZ"
+                ),
+                "modified": datetime.strptime(
+                    cve_item["lastModifiedDate"], "%Y-%m-%dT%H:%MZ"
+                ),
+                "indicator_types": ["compromised"],
+                "name": cve_item["cve"]["CVE_data_meta"]["ID"],
+                "description": cve_item["cve"]["description"]["description_data"][0][
+                    "value"
+                ],
+                "pattern": "[ software.cpe = 'cpe:2.3:a:dell:powerscale_onefs:9.0.0:*:*:*:*:*:*:*' ]",
+                "pattern_type": "stix",
+                "valid_from": datetime.strptime(
+                    cve_item["publishedDate"], "%Y-%m-%dT%H:%MZ"
+                ),
+            }
+
+            vulnerabilities.append(Vulnerability(**vulnerability_dict))
+            indicators.append(Indicator(**indicator_dict))
         except:
             logger.warning(
                 "An unexpected error occurred when parsing CVE %s",
                 cve_item.get("cve").get("CVE_data_meta").get("ID"),
             )
+            raise
 
-    return vulnerabilities
-
-# def parse_cpe_api_response(cpe_content):
-#     softwares = []
-
-#     for cpe_item in cpe_
+    return vulnerabilities, indicators

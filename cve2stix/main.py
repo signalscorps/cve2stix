@@ -20,69 +20,52 @@ logger = logging.getLogger(__name__)
 
 
 def main(config: Config):
+    
+    start_date = config.cve_backfill_start_date
+    end_date = config.cve_backfill_end_date
+    total_results = math.inf
+    start_index = -1
 
-    if (
-        os.path.exists(config.stix2_objects_folder) == True
-        and len(os.listdir(config.stix2_objects_folder)) > 0
-    ):
-        logger.error(
-            "%s folder is not empty. Please specify an empty folder in stix2-objects-folder field in download-settings.",
-            config.stix2_objects_folder,
+    logger.info(
+        "Getting CVEs from %s to %s",
+        start_date.strftime("%Y-%m-%d"),
+        end_date.strftime("%Y-%m-%d"),
+    )
+
+    while config.results_per_page * (start_index + 1) < total_results:
+
+        start_index += 1
+
+        logger.debug("Calling NVD CVE API with startIndex: %d", start_index)
+
+        # Create CVE query and send request to NVD API
+        query = {
+            "apiKey": config.api_key,
+            "pubStartDate": get_date_string_nvd_format(start_date),
+            "pubEndDate": get_date_string_nvd_format(end_date),
+            "addOns": "dictionaryCpes",
+            "resultsPerPage": config.results_per_page,
+            "sortOrder": "publishedDate",
+            "startIndex": start_index,
+        }
+        response = requests.get(config.nvd_cve_api_endpoint, query)
+        content = response.json()
+        logger.debug(
+            "Got response from NVD API with status code: %d", response.status_code
         )
-        exit(1)
 
-    for start_date in rrule.rrule(
-        rrule.MONTHLY,
-        dtstart=config.cve_backfill_start_date,
-        until=config.cve_backfill_end_date,
-    ):
-
-        end_date = start_date + relativedelta(months=1)
-        total_results = math.inf
-        start_index = -1
-
-        logger.info(
-            "Getting CVEs from %s to %s",
-            start_date.strftime("%Y-%m-%d"),
-            end_date.strftime("%Y-%m-%d"),
+        vulnerabilities, indicators = parse_cve_api_response(content)
+        logger.debug(
+            "Parsed %s CVEs into vulnerability stix objects", len(vulnerabilities)
         )
 
-        while config.results_per_page * (start_index + 1) < total_results:
+        total_results = content["totalResults"]
 
-            start_index += 1
+        # Store CVEs in stix store
+        stix_store = StixStore()
+        stix_store.store_objects_in_filestore(vulnerabilities + indicators)
 
-            logger.debug("Calling NVD CVE API with startIndex: %d", start_index)
-
-            # Create CVE query and send request to NVD API
-            query = {
-                "apiKey": config.api_key,
-                "pubStartDate": get_date_string_nvd_format(start_date),
-                "pubEndDate": get_date_string_nvd_format(end_date),
-                "addOns": "dictionaryCpes",
-                "resultsPerPage": config.results_per_page,
-                "sortOrder": "publishedDate",
-                "startIndex": start_index,
-            }
-            response = requests.get(config.nvd_cve_api_endpoint, query)
-            content = response.json()
-            logger.debug(
-                "Got response from NVD API with status code: %d", response.status_code
-            )
-
-            vulnerabilities = parse_cve_api_response(content)
-            logger.debug(
-                "Parsed %s CVEs into vulnerability stix objects", len(vulnerabilities)
-            )
-
-            total_results = content["totalResults"]
-
-            # Store CVEs in stix store
-            stix_store = StixStore()
-            stix_store.store_objects_in_filestore(vulnerabilities)
-
-            logger.info("Stored %d cves in stix2_objects folder", len(vulnerabilities))
-
-            time.sleep(5)
+        logger.info("Stored %d cves in stix2_objects folder", len(vulnerabilities))
 
     # for start_date in rrule.rrule(
     #     rrule.MONTHLY,
