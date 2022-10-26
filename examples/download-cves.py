@@ -27,6 +27,13 @@ CREDENTIALS_FILE_PATH = REPO_FOLDER / "credentials.yml"
 
 STIX2_OBJECTS_FOLDER = os.path.abspath("stix2_objects")
 
+repo = git.Repo(".")
+repo.config_writer().set_value("user", "name", "Shanthanu").release()
+repo.config_writer().set_value(
+    "user", "email", "31900229+shanthanu9@users.noreply.github.com"
+).release()
+
+
 api_key = None
 if os.path.exists(CREDENTIALS_FILE_PATH):
     with open(CREDENTIALS_FILE_PATH, "r") as stream:
@@ -56,8 +63,5 @@ for start_date in rrule.rrule(
 
     main(config)
 
-    repo = git.Repo(".")
     repo.git.add("--all")
-    repo.git.commit(
-        "-m", f"Add CVEs from {start_date} to {end_date}"
-    )
+    repo.git.commit("-m", f"Add CVEs from {start_date} to {end_date}")
