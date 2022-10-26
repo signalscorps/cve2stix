@@ -69,7 +69,7 @@ def parse_cve_api_response(cve_content):
                 "description": cve_item["cve"]["description"]["description_data"][0][
                     "value"
                 ],
-                "pattern": "[ software.cpe = 'cpe:2.3:a:dell:powerscale_onefs:9.0.0:*:*:*:*:*:*:*' ]",
+                "pattern": "[ software:cpe = 'cpe:2.3:a:dell:powerscale_onefs:9.0.0:*:*:*:*:*:*:*' ]", # TODO: Placeholder for now
                 "pattern_type": "stix",
                 "valid_from": datetime.strptime(
                     cve_item["publishedDate"], "%Y-%m-%dT%H:%MZ"
