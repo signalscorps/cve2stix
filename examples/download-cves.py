@@ -20,18 +20,18 @@ import yaml
 
 from cve2stix.config import Config
 from cve2stix.main import main
+from cve2stix import logger
 
 EXAMPLES_FOLDER = Path(os.path.abspath(__file__)).parent
 REPO_FOLDER = EXAMPLES_FOLDER.parent
 CREDENTIALS_FILE_PATH = REPO_FOLDER / "credentials.yml"
 
-STIX2_OBJECTS_FOLDER = os.path.abspath("stix2_objects")
+STIX2_OBJECTS_FOLDER = REPO_FOLDER / "stix2_objects"
 
-repo = git.Repo(".")
-repo.config_writer().set_value("user", "name", "Shanthanu").release()
-repo.config_writer().set_value(
-    "user", "email", "31900229+shanthanu9@users.noreply.github.com"
-).release()
+repo = git.Repo(REPO_FOLDER)
+repo.config_writer().set_value("user", "name", "cve2stix").release()
+repo.config_writer().set_value("user", "email", "cve2stix@example.com").release()
+repo.git.checkout("beta-1")
 
 
 api_key = None
@@ -44,7 +44,7 @@ if os.path.exists(CREDENTIALS_FILE_PATH):
             pass
 
 cve_start_date = datetime(1999, 1, 1)
-cve_end_date = datetime(2000, 1, 1)
+cve_end_date = datetime(1999, 12, 31)
 
 for start_date in rrule.rrule(
     rrule.MONTHLY,
@@ -64,4 +64,13 @@ for start_date in rrule.rrule(
     main(config)
 
     repo.git.add("--all")
-    repo.git.commit("-m", f"Add CVEs from {start_date} to {end_date}")
+    repo.git.commit(
+        "-m",
+        f"Add CVEs from {start_date.strftime('%Y-%m-%d')} to {end_date.strftime('%Y-%m-%d')}",
+    )
+
+    logger.info(
+        "Commit: Add CVEs from %s to %s",
+        start_date.strftime("%Y-%m-%d"),
+        end_date.strftime("%Y-%m-%d"),
+    )
