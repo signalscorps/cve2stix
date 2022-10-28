@@ -1,8 +1,4 @@
-on:
-  push:
-    branches:
-    - main
-    - beta-1
+on: workflow_dispatch
 
 jobs:
   first-time-cve-download:
@@ -24,3 +20,6 @@ jobs:
       - name: Run cve2stix
         run: |
           python examples/download-cves.py
+      - name: Push commits to repo
+        run: |
+          git push origin beta-1
