@@ -20,7 +20,7 @@ logger = logging.getLogger(__name__)
 
 
 def main(config: Config):
-    
+
     start_date = config.cve_backfill_start_date
     end_date = config.cve_backfill_end_date
     total_results = math.inf
@@ -49,6 +49,15 @@ def main(config: Config):
             "startIndex": start_index,
         }
         response = requests.get(config.nvd_cve_api_endpoint, query)
+
+        if response.status_code != 200:
+            start_index -= 1
+            logger.warning(
+                "Got status code %d. Backing off for 10 secondss", response.status_code
+            )
+            time.sleep(10)
+            continue
+
         content = response.json()
         logger.debug(
             "Got response from NVD API with status code: %d", response.status_code

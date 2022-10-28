@@ -16,6 +16,7 @@ from dateutil.relativedelta import relativedelta
 import git
 from pathlib import Path
 import os
+import time
 import yaml
 
 from cve2stix.config import Config
@@ -74,3 +75,5 @@ for start_date in rrule.rrule(
         start_date.strftime("%Y-%m-%d"),
         end_date.strftime("%Y-%m-%d"),
     )
+
+    time.sleep(5)
