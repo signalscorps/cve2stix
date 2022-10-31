@@ -21,18 +21,18 @@ For example, 2017/3xxx is for CVE-2017-3000 - CVE-2017-3999, and 2017/1002xxx is
 The structure is as follows;
 
 * `stix2_objects/`
-	* `cves/`
-		* `YEAR`
-			* `<XXXX>`
-				* `<CVE_ID>`
-					* `indicator`
-						* `version`
-					* `vulnerability`
-						* `version`
-					* `relationship`
-						* `version`
-					* `bundle`
-						* _Only contains most recent bundle version with latest versions of Indicator, Vulnerabilty, and Relationship objects_
+	* `indicator`
+		* `version`
+	* `vulnerability`
+		* `version`
+	* `relationship`
+		* `version`
+* `stix2_bundles/`
+	* `YEAR`
+		* `<XXXX>`
+			* `<CVE_ID>`
+				* `bundle`
+					* _Only contains most recent bundle version with latest versions of Indicator, Vulnerabilty, Relationship and enrichment objects_
 
 This backend is always used as the json files saved are used to populate other backends.
 
