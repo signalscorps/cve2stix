@@ -1,11 +1,27 @@
 # cve2stix Documentations
 
-In short; cve2stix converts CVEs from the NVD into STIX 2.1 Objects. Once STIX 2.1 Objects are created for each CVE, users can compare their own products against them to identify those that are vulnerable.
+In short; cve2stix converts CVEs from the NVD into STIX 2.1 Objects.
 
-In this documentation you will find each of these steps between input and output explained. 
+In this documentation you will find details of how this is performed.
 
-* [Ingest CPEs as STIX 2.1](./cpe_sync.md): CVEs refer to CPEs. Therefore a copy of all CPEs in the NVD database are imported/updated by cve2stix and converted to STIX 2.1 Software Objects. This section of the documentation explains how this works.
-* [Ingest CVEs as STIX 2.1](./cve_sync.md): cve2stix can be used to download CVEs in the NVD database. On import/update it converts them to STIX 2.1 ulnerability Objects and Indicator Objects (with STIX Patterns). This section of the documentation explains how this works.
-* [Enrich CVE data with ATT&CK and CAPEC](./enrichments.md): cve2stix also adds additional context to CVEs using ATT&CK and CAPEC STIX 2.1 Objects. This section of the documentation explains how this works.
-* [Alerting](./alerts.md): cve2stix also periodically checks CPEs defined by a user against those that exist in CVE records downloaded by cpe2stix. This section of the documentation explains how alerting works.
+For installation, [please see the README.md file at the root of cve2stix](https://github.com/signalscorps/cve2stix).
+
+## What's in the docs?
+
+* [NVD API (CVE Download)](./nvd-api.md): cve2stix downloads data from the NVD CVE API. This section of the documentation explains how backfill and updates happen.
+* [Conversion to STIX 2.1](./stix-objects.md): cve2stix converts all CVEs into a range of STIX Objects. This section of the documentation explains how STIX Objects are created.
+* [Enrichment with ATT&CK and CAPEC](./enrichments.md): cve2stix also adds additional context to CVEs using ATT&CK and CAPEC STIX 2.1 Objects. This section of the documentation explains how this enrichment works.
 * [Backends](./backends.md): Backends allow you to store STIX Objects in a database of your choice in addition to the local filesystem. This section of the documentation shows available backends and how to configure them.
+
+## Building these docs
+
+You are probably reading this online (deployed via Github pages `.github/workflows/docs.yml`.
+
+https://signalscorps.github.io/cve2stix/
+
+If you want to build the docs locally, from the root directory run;
+
+```shell
+pip3 install -r docs/requirements.txt
+mkdocs serve --config-file mkdocs.yml
+```
