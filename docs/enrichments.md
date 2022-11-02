@@ -53,7 +53,9 @@ The CWE inside the Vulnerability Object is matched to the CAPEC Attack Pattern o
 
 For example, using the earlier example of CWE-20 inside a Vulnerability, it would match to [CAPEC-73](https://github.com/mitre/cti/blob/master/capec/2.1/attack-pattern/attack-pattern--f156c3d0-eeb3-4e12-b075-8995c009de55.json), [CAPEC-473](https://github.com/mitre/cti/blob/master/capec/2.1/attack-pattern/attack-pattern--d94762c1-3c78-47eb-8212-e0c770ba43a9.json), etc.
 
-In the case of a match, no new Attack Pattern object is actually created. A new Relationship Object is created between the created STIX Vulnerability Object with imported CAPEC STIX Object. The CAPEC STIX Object is saved, but remains unmodified.
+In the case of a match, no new Attack Pattern object is actually created, the existing one is imported.
+
+A new Relationship Object is created between the created STIX Vulnerability Object with imported CAPEC STIX Object. The CAPEC STIX Object is saved, but remains unmodified.
 
 When these matches are found, CAPECs are linked to Vulnerability records using the following relationship object structure;
 
@@ -96,3 +98,5 @@ Therefore a join is made between CVEs linked to CAPEC ID (600) and the ATT&CK ST
   "target_ref": "vulnerability--<CVE VULNERABILITY OBJECT>"
 }
 ```
+
+Like with CAPECs the ATT&CK object is also imported.
