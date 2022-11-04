@@ -22,16 +22,19 @@ The structure is as follows;
 
 * `stix2_objects/`
 	* `indicator`
-		* `version`
+		* `indicator-ID`
+			* `version`
 	* `vulnerability`
-		* `version`
+		* `vulnerability-ID`
+			* `version`
 	* `relationship`
-		* `version`
+		* `relationship-ID`
+			* `version`
 * `stix2_bundles/`
 	* `YEAR`
 		* `<XXXX>`
 			* `<CVE_ID>`
 				* `bundle`
-					* _Only contains most recent bundle version with latest versions of Indicator, Vulnerabilty, Relationship and enrichment objects_
+					* _Bundle contains latest versions of Indicator, Vulnerabilty, Relationship and enrichment objects. Each time an object in a bundle is updated (or new object added), a new bundle is generated (with new `id`). Only latest bundle version exists in this directory._
 
 This backend is always used as the json files saved are used to populate other backends.
