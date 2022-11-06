@@ -15,19 +15,51 @@ Use cve2stix to:
 	* with valid STIX patterns for matching)
 * Automatically converting CPEs into STIX format
 
-## cve2stix-data (avoid having to use this script)
+## cve2stix-output (avoid having to use this script)
 
-This repository has a number of Github actions that run daily to populate [cve2stix-data](https://github.com/signalscorps/cve2stix-data) with historical CVE data (updated daily).
+This repository has a number of Github actions that run daily to populate [cve2stix-output](https://github.com/signalscorps/cve2stix-output) with historical CVE data (updated daily).
 
 ## Prerequisties
 
 To use cve2stix you will need to obtain a free API key from NVD.
 
-You can get one here: https://nvd.nist.gov/developers/start-here
-
-Once you have your key, create a file in the root of this repository copy the `nvd-credentials.yml.schema` to a new file called `nvd-credentials.yml` and enter your API key.
+[You can get one here](https://nvd.nist.gov/developers/start-here).
 
 ## Usage
+
+### Option 1: Github Actions
+
+This script has been built with existing Github actions (to populate [cve2stix-output](https://github.com/signalscorps/cve2stix-output)).
+
+If you want to run the script yourself using Github actions you can setup automated downloads as follows;
+
+#### Add API Key
+
+Once you have your key, `NVD_API_key` as a repository variable (settings > secrets > actions) with your NVD API key as the value.
+
+#### Check the Github actions
+
+In `.github/workflows` you will find a number of files
+
+TODO
+
+Ignore, `docs.yml`, this file is used to generate the product docs.
+
+#### 3. Run the Github actions
+
+TODO
+
+### Option 2: Run locally
+
+This script can be downloaded and run locally as follows;
+
+#### Add API Key
+
+Once you have your key, create a file in the root of this repository by copying the `nvd-credentials.yml.schema` to a new file called `nvd-credentials.yml`. Enter your API key for the variable `nvd_api_key` in this file.
+
+#### Run the script
+
+TODO
 
 ```shell
 file2stix --download-settings /path/to/download-settings.yml --match-vulnerabilities
@@ -49,23 +81,11 @@ Where;
 	* `cve-cvss3-impactScore-min` (optional, default; `*`): defines the minimum cvss3.impactScore in the CVEs to be returned. 
 * `--match-vulnerabilities` (optional, default; false): if true, then the CPE match file will be compared to CVEs to generete alerts. If running for the second time with this flag, this will only consider CVEs with update date > last run time.
 
-### A note on CVSS v3 filtering
-
-Note, newly published CVEs will generally do not have a CVSS score assigned until they are reviewed. This means cve2stix will not download these CVEs until the analysis by NVD to assign a CVSS v3 score is complete.
-
-Secondly, CVEs before June 2015 do not have CVSS v3 scores (when CVSS v3 was released). Therefore using CVSS v3 filtering will not return any CVEs before June 2015.
-
-### Important note on persistance
-
-At present, file2stix is not designed for the `download-settings.yml` to be modified. Once run once, cve2stix expects the same `download-settings.yml` file to be run.
-
-If you want to use a different settings, create a new `download-settings.yml` file with a new name (e.g. `download-settings-new.yml`) and run that. This will assume a clean environment, and cve2stix will assume the script is running for the first time.
-
 ## Documentation
 
 Please take a moment to review the comprehensive documentation included in this repository -- it covers almost all common questions people have about cve2stix.
 
-[Read the documentation here](/docs/index.md).
+[Read the documentation here](https://signalscorps.github.io/cve2stix/).
 
 ## Support
 
