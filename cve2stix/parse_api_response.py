@@ -136,7 +136,7 @@ def parse_cve_api_response(cve_content):
                     vulnerable_cpes += temp_vuln_cpes
                     all_cpes += temp_all_cpes
 
-                pattern = pattern_so_far.replace("\\", "\\\\")
+                pattern = pattern_so_far.replace("\\/", "\\\\/")
                 indicator_dict["pattern"] = f"[{pattern}]"
                 indicator_dict["extensions"] = {
                     "extension-definition--b463c449-d022-48b7-b464-3e9c7ec5cf16": {
