@@ -9,14 +9,15 @@ cve2stix was designed for two use-cases;
 1. to match specific software (CPEs) to new and existing vulnerabilities (CVEs) to alert when vulnerablities exist
 2. to feed Threat Intelligence Platforms with rich vulnerability information for research and analysis.
 
-
 Use cve2stix to:
 
 * Automatically converting CVEs into STIX format (as Indicators and Vulnerability Objects)
 	* with valid STIX patterns for matching)
 * Automatically converting CPEs into STIX format
 
-Why use cve2stix;
+## cve2stix-data (avoid having to use this script)
+
+This repository has a number of Github actions that run daily to populate [cve2stix-data](https://github.com/signalscorps/cve2stix-data) with historical CVE data (updated daily).
 
 ## Prerequisties
 
