@@ -5,15 +5,11 @@ Contains logic for storing parsed stix objects.
 import json
 import os
 import logging
-from stix2 import FileSystemStore, Filter, Bundle
+from stix2 import FileSystemStore, Filter, Bundle, MemoryStore
 from stix2.base import STIXJSONEncoder
 from stix2.datastore import DataSourceError
 
 logger = logging.getLogger(__name__)
-
-# Folders for STIX2 reports
-STIX2_EXTRACTIONS_FOLDER = os.path.abspath("stix2_objects")
-STIX2_REPORTS_FOLDER = os.path.abspath("stix2_reports")
 
 
 class StixStore:
@@ -21,11 +17,10 @@ class StixStore:
     Interface for handling storing and getting STIX objects
     """
 
-    def __init__(
-        self, file_store_path=STIX2_EXTRACTIONS_FOLDER, bundle_path=STIX2_REPORTS_FOLDER
-    ):
+    def __init__(self, file_store_path, bundle_path):
         if os.path.exists(file_store_path) == False:
             os.makedirs(file_store_path)
+        self.file_store_path = file_store_path
         self.stix_file_store = FileSystemStore(file_store_path, allow_custom=True)
 
         if os.path.exists(bundle_path) == False:
@@ -55,7 +50,7 @@ class StixStore:
 
         if tlp_level:
             query += [Filter("object_marking_refs", "=", tlp_level)]
-        
+
         if extensions:
             query += [Filter("extensions", "=", extensions)]
 
@@ -79,7 +74,7 @@ class StixStore:
             return None
 
         return observables_found[0]
-    
+
     def get_object_custom_query(
         self,
         filters,
@@ -93,34 +88,78 @@ class StixStore:
 
     def store_objects_in_filestore(self, stix_objects):
         for stix_object in stix_objects:
-            try:
-                self.stix_file_store.add(stix_object)
-            except DataSourceError as ex:
-                # Ignoring error, since it occurs when file is already
-                # present in the file store, which is OK
-                if hasattr(stix_object, "id"):
-                    logger.debug(
-                        "Exception caught while storing stix object %s: %s",
-                        stix_object.id,
-                        ex,
-                    )
-                else:
-                    logger.debug(
-                        "Exception caught while storing stix object %s: %s",
-                        stix_object,
-                        ex,
-                    )
+            self.store_object_in_filestore(stix_object)
 
-    def store_objects_in_bundle(self, stix_objects, output_json_file_path=None):
-        bundle_of_all_objects = Bundle(*stix_objects, allow_custom=True)
+    def store_object_in_filestore(self, stix_object):
+        try:
+            self.stix_file_store.add(stix_object)
+        except DataSourceError as ex:
+            # Ignoring error, since it occurs when file is already
+            # present in the file store, which is OK
+            if hasattr(stix_object, "id"):
+                logger.debug(
+                    "Exception caught while storing stix object %s: %s",
+                    stix_object.id,
+                    ex,
+                )
+            else:
+                logger.debug(
+                    "Exception caught while storing stix object %s: %s",
+                    stix_object,
+                    ex,
+                )
 
-        stix_bundle_file = output_json_file_path
+    def get_stix_bundle_cve_folder(self, cve_id):
+        _, year, id = cve_id.split("-")
+        block = id[:-3] + "XXX"
+        return f"{self.stix_bundle_path}/{year}/{block}/{cve_id}/"
 
-        if stix_bundle_file == None:
-            stix_bundle_file = os.path.join(
-                self.stix_bundle_path, f"{bundle_of_all_objects.id}.json"
-            )
+    def get_cve_from_bundle(self, cve_id):
+        # TODO: Issue here
+        stix_bundle_cve_folder = self.get_stix_bundle_cve_folder(cve_id)
+        stix_bundle_file = f"{stix_bundle_cve_folder}/stix_bundle.json"
+        if os.path.isfile(stix_bundle_file) == False:
+            return None
+        
+        memory_store = MemoryStore()
+        memory_store.load_from_file(stix_bundle_file)
+        vulnerabilities = memory_store.query([Filter("type", "=", "vulnerability")])
+        indicators = memory_store.query([Filter("type", "=", "indicator")])
+        relationships = memory_store.query([Filter("type", "=", "relationship")])
+
+        vulnerability = vulnerabilities[0]
+        indicator = None
+        relationship = None
+        if indicators != None and len(indicators) > 0:
+            indicator = indicators[0]
+        if relationships != None and len(relationships) > 0:
+            relationship = relationships[0]
+        
+        return {
+            "vulnerability": vulnerability,
+            "indicator": indicator,
+            "relationship": relationship
+        }
+        
+
+    def store_cve_in_bundle(self, cve_id, stix_objects, cve_item, update=False):
+        # Create a bundle
+        bundle_of_all_objects = Bundle(*stix_objects)
+
+        # Create folder to store CVE
+        stix_bundle_cve_folder = self.get_stix_bundle_cve_folder(cve_id)
+        os.makedirs(stix_bundle_cve_folder, exist_ok=True)
+
+        stix_bundle_file = f"{stix_bundle_cve_folder}/stix_bundle.json"
+        nvd_response_file = f"{stix_bundle_cve_folder}/nvd_response.json"
+        if os.path.isfile(stix_bundle_file) and update == False:
+            return False
+
         with open(stix_bundle_file, "w") as f:
             f.write(json.dumps(bundle_of_all_objects, cls=STIXJSONEncoder, indent=4))
+        
+        with open(nvd_response_file, "w") as f:
+            f.write(json.dumps(cve_item, indent=4))
+        
+        return True
 
-        return bundle_of_all_objects.id, stix_bundle_file

@@ -2,13 +2,14 @@
 Main driver logic for cve2stix
 """
 
-from dateutil import rrule
-from dateutil.relativedelta import relativedelta
+import json
 import logging
 import math
-import os
 import requests
 import time
+from dateutil.relativedelta import relativedelta
+from stix2 import new_version
+from stix2.exceptions import InvalidValueError
 
 from cve2stix.config import Config
 from cve2stix.error_handling import store_error_logs_in_file
@@ -19,128 +20,204 @@ from cve2stix.stix_store import StixStore
 logger = logging.getLogger(__name__)
 
 
+def store_new_cve(stix_store, vulnerability, indicator, relationship, cve_item):
+    stix_objects = [vulnerability]
+    if indicator != None:
+        stix_objects.append(indicator)
+    if relationship != None:
+        stix_objects.append(relationship)
+
+    status = stix_store.store_cve_in_bundle(
+        vulnerability["name"], stix_objects, cve_item
+    )
+    if status == False:
+        return False
+
+    stix_store.store_objects_in_filestore(stix_objects)
+    return True
+
+
+def update_existing_cve(
+    existing_cve, stix_store, vulnerability, indicator, relationship, cve_item
+):
+    stix_objects = []
+    try:
+        vulnerability_dict = json.loads(vulnerability.serialize())
+        vulnerability_dict.pop("type", None)
+        vulnerability_dict.pop("created", None)
+        vulnerability_dict.pop("id", None)
+        vulnerability_dict.pop("created_by_ref", None)
+        old_vulnerability = stix_store.get_object_by_id(
+            existing_cve["vulnerability"]["id"]
+        )
+        new_vulnerability = new_version(old_vulnerability, **vulnerability_dict)
+        stix_objects.append(new_vulnerability)
+
+        if indicator != None:
+            indicator_dict = json.loads(indicator.serialize())
+            indicator_dict.pop("type", None)
+            indicator_dict.pop("created", None)
+            indicator_dict.pop("id", None)
+            indicator_dict.pop("created_by_ref", None)
+
+            old_indicator = None
+            if existing_cve["indicator"] != None:
+                old_indicator = stix_store.get_object_by_id(
+                    existing_cve["indicator"]["id"]
+                )
+
+            new_indicator = indicator
+            if old_indicator != None:
+                new_indicator = new_version(old_indicator, **indicator_dict)
+            stix_objects.append(new_indicator)
+
+        if relationship != None:
+            old_relationship = None
+            if existing_cve["relationship"] != None:
+                old_relationship = stix_store.get_object_by_id(
+                    existing_cve.relationship_stix_id
+                )
+
+            new_relationship = relationship
+            if old_relationship != None:
+                new_relationship = new_version(
+                    old_relationship, modified=vulnerability["modified"]
+                )
+            stix_objects.append(new_relationship)
+
+        stix_store.store_objects_in_filestore(stix_objects)
+        stix_store.store_cve_in_bundle(
+            vulnerability["name"], stix_objects, cve_item, update=True
+        )
+
+    except InvalidValueError:
+        logger.warning(
+            "Tried updating %s, whose latest copy is already downloaded. Hence skipping it",
+            vulnerability["name"],
+        )
+
+
 def main(config: Config):
 
-    start_date = config.cve_backfill_start_date
-    end_date = config.cve_backfill_end_date
-    total_results = math.inf
-    start_index = -1
+    start_date = config.cve_start_date
+    
+    # Iterate over each month seperately
+    while start_date < config.cve_end_date:
 
-    logger.info(
-        "Getting CVEs from %s to %s",
-        start_date.strftime("%Y-%m-%d"),
-        end_date.strftime("%Y-%m-%d"),
-    )
+        end_date = min(start_date + relativedelta(months=1), config.cve_end_date)
 
-    while config.results_per_page * (start_index + 1) < total_results:
+        logger.info(
+            "%s CVEs from %s to %s",
+            config.run_mode.capitalize(),
+            start_date.strftime("%Y-%m-%d"),
+            end_date.strftime("%Y-%m-%d"),
+        )
 
-        start_index += 1
+        total_results = math.inf
+        start_index = -1
+        backoff_time = 10
 
-        logger.debug("Calling NVD CVE API with startIndex: %d", start_index)
+        while config.results_per_page * (start_index + 1) < total_results:
 
-        # Create CVE query and send request to NVD API
-        query = {
-            "apiKey": config.api_key,
-            "pubStartDate": get_date_string_nvd_format(start_date),
-            "pubEndDate": get_date_string_nvd_format(end_date),
-            "addOns": "dictionaryCpes",
-            "resultsPerPage": config.results_per_page,
-            "sortOrder": "publishedDate",
-            "startIndex": start_index,
-        }
-        response = requests.get(config.nvd_cve_api_endpoint, query)
+            start_index += 1
 
-        if response.status_code != 200:
-            start_index -= 1
-            logger.warning(
-                "Got status code %d. Backing off for 10 secondss", response.status_code
+            logger.debug("Calling NVD CVE API with startIndex: %d", start_index)
+
+            # Create CVE query and send request to NVD API
+            query = {
+                "apiKey": config.api_key,
+                "addOns": "dictionaryCpes",
+                "resultsPerPage": config.results_per_page,
+                "sortOrder": "publishedDate",
+                "startIndex": start_index * config.results_per_page,
+            }
+
+            if config.run_mode == "download":
+                query["pubStartDate"] = get_date_string_nvd_format(start_date)
+                query["pubEndDate"] = get_date_string_nvd_format(end_date)
+            else:
+                query["modStartDate"] = get_date_string_nvd_format(start_date)
+                query["modEndDate"] = get_date_string_nvd_format(end_date)
+                query["includeMatchStringChange"] = True
+
+            try:
+
+                response = requests.get(config.nvd_cve_api_endpoint, query)
+
+                if response.status_code != 200:
+                    logger.warning("Got response status code %d.", response.status_code)
+                    raise requests.ConnectionError
+
+            except requests.ConnectionError as ex:
+                logger.warning(
+                    "Got ConnectionError. Backing off for %d seconds.", backoff_time
+                )
+                start_index -= 1
+                time.sleep(backoff_time)
+                backoff_time *= 2
+                continue
+
+            content = response.json()
+            logger.debug(
+                "Got response from NVD API with status code: %d", response.status_code
             )
-            time.sleep(10)
-            continue
 
-        content = response.json()
-        logger.debug(
-            "Got response from NVD API with status code: %d", response.status_code
-        )
+            parsed_responses = parse_cve_api_response(content)
+            logger.debug(
+                "Parsed %s CVEs into vulnerability stix objects", len(parsed_responses)
+            )
 
-        vulnerabilities, indicators = parse_cve_api_response(content)
-        logger.debug(
-            "Parsed %s CVEs into vulnerability stix objects", len(vulnerabilities)
-        )
+            total_results = content["totalResults"]
 
-        total_results = content["totalResults"]
+            # Store CVEs in database and stix store
+            stix_store = StixStore(config.stix2_objects_folder, config.stix2_bundles_folder)
+            total_store_count = 0
+            total_update_count = 0
 
-        # Store CVEs in stix store
-        stix_store = StixStore()
-        stix_store.store_objects_in_filestore(vulnerabilities + indicators)
+            for parsed_response in parsed_responses:
+                vulnerability = parsed_response["vulnerability"]
+                indicator = parsed_response["indicator"]
+                relationship = parsed_response["relationship"]
+                cve_item = parsed_response["cve_item"]
 
-        logger.info("Stored %d cves in stix2_objects folder", len(vulnerabilities))
+                cve = stix_store.get_cve_from_bundle(vulnerability["name"])
+                if cve == None:
+                    # CVE not present, so we download it
+                    status = store_new_cve(
+                        stix_store,
+                        vulnerability,
+                        indicator,
+                        relationship,
+                        cve_item,
+                    )
+                    if status == True:
+                        total_store_count += 1
+                else:
+                    # CVE already present, so we update it
+                    status = update_existing_cve(
+                        cve,
+                        stix_store,
+                        vulnerability,
+                        indicator,
+                        relationship,
+                        cve_item,
+                    )
+                    if status == True:
+                        total_update_count += 1
 
-    # for start_date in rrule.rrule(
-    #     rrule.MONTHLY,
-    #     dtstart=config.cve_backfill_start_date,
-    #     until=config.cve_backfill_end_date,
-    # ):
+            logger.info(
+                "Downloaded %d cves and updated %d cves",
+                total_store_count,
+                total_update_count,
+            )
 
-    #     end_date = start_date + relativedelta(months=1)
-    #     total_results = math.inf
-    #     start_index = -1
+            if config.results_per_page * (start_index + 1) < total_results:
+                time.sleep(5)
 
-    #     logger.info(
-    #         "Getting CPEs from %s to %s",
-    #         start_date.strftime("%Y-%m-%d"),
-    #         end_date.strftime("%Y-%m-%d"),
-    #     )
+            backoff_time = 10
+        start_date = end_date
 
-    #     while config.results_per_page * (start_index + 1) < total_results:
-
-    #         start_index += 1
-
-    #         logger.debug("Calling NVD CPE API with startIndex: %d", start_index)
-
-    #         # Create CVE query and send request to NVD API
-    #         query = {
-    #             "apiKey": config.api_key,
-    #             "pubStartDate": get_date_string_nvd_format(start_date),
-    #             "pubEndDate": get_date_string_nvd_format(end_date),
-    #             "addOns": "cves",
-    #             "resultsPerPage": config.results_per_page,
-    #             "sortOrder": "publishedDate",
-    #             "startIndex": start_index,
-    #         }
-    #         response = requests.get(config.nvd_cve_api_endpoint, query)
-    #         content = response.json()
-    #         logger.debug(
-    #             "Got response from NVD API with status code: %d", response.status_code
-    #         )
-
-    #         vulnerabilities = parse_cve_api_response(content)
-    #         logger.debug(
-    #             "Parsed %s CVEs into vulnerability stix objects", len(vulnerabilities)
-    #         )
-
-    #         total_results = content["totalResults"]
-
-    #         # Store CVEs in stix store
-    #         stix_store = StixStore()
-    #         stix_store.store_objects_in_filestore(vulnerabilities)
-
-    #         logger.info("Stored %d cves in stix2_objects folder", len(vulnerabilities))
+        if start_date < config.cve_end_date:
+            time.sleep(5)
 
     store_error_logs_in_file()
-
-    # CPE query
-    # query = {
-    #     "apiKey": config.api_key,
-    #     "modStartDate": "2021-10-01T00:00:00:001 Z",
-    #     "modEndDate": "2021-10-31T00:00:00:000 Z",
-    #     "addOns": "cves"
-    # }
-
-    # response = requests.get(config.nvd_cve_api_endpoint, query)
-
-    # print("Status Code:", response.status_code)
-
-    # content = response.json()
-
-    # print(content)
