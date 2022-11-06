@@ -45,6 +45,11 @@ Below you can see the fields from the CVE API Response that are mapped to the Vu
             "source_name": "<CVE_Items.cve.references.reference_data.name.[n]>",
             "url": "<CVE_Items.references.reference_data.url.[n]>",
         },
+        {
+            "source_name": "cve2stix",
+            "description": "This object was created using cve2stix from the Signals Corps.",
+            "url": "https://github.com/signalscorps/cve2stix"
+        }
     ],
     "extensions": {
         "extension-definition--b2b5f2cd-49e6-4091-a0e0-c0bb71543e23": {
@@ -89,6 +94,11 @@ As an example using CVE-2022-33678;
               "Patch",
               "Vendor Advisory"
             ]
+        },
+        {
+            "source_name": "cve2stix",
+            "description": "This object was created using cve2stix from the Signals Corps.",
+            "url": "https://github.com/signalscorps/cve2stix"
         }
     ],
     "extensions": {
@@ -235,6 +245,13 @@ The general structure of the indicator object takes the form;
     "pattern": "[<CPE MATCH PATTERN>]",
     "pattern_type": "stix",
     "valid_from": "<CVE_Items.publishedDate>",
+    "external_references": [
+        {
+            "source_name": "cve2stix",
+            "description": "This object was created using cve2stix from the Signals Corps.",
+            "url": "https://github.com/signalscorps/cve2stix"
+        }
+    ],
     "extensions": {
         "extension-definition--b463c449-d022-48b7-b464-3e9c7ec5cf16": {
             "extension_type": "property-extension",
@@ -713,7 +730,14 @@ To create the Vulnerability to Indicator Relationship the following Relationship
     "modified": "<publishedDate of cve>",
     "relationship_type": "identifies",
     "source_ref": "indicator--<Indicator STIX Object>",
-    "target_ref": "vulnerability--<Vulnerability STIX Object>"
+    "target_ref": "vulnerability--<Vulnerability STIX Object>",
+    "external_references": [
+        {
+            "source_name": "cve2stix",
+            "description": "This object was created using cve2stix from the Signals Corps.",
+            "url": "https://github.com/signalscorps/cve2stix"
+        }
+    ]
 }
 ```
 
