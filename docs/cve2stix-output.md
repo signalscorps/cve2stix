@@ -1,1 +1,0 @@
-cve2stix-output

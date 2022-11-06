@@ -16,37 +16,19 @@ To use cve2stix you will need to obtain a free API key from NVD.
 
 ## Usage
 
-### Option 1: Github Actions
+This repository has been built with Github actions (to populate [cve2stix-output](https://github.com/signalscorps/cve2stix-output)). If you want to understand how this works, [please read the documentation here](/docs/github-actions).
 
-This script has been built with existing Github actions (to populate [cve2stix-output](https://github.com/signalscorps/cve2stix-output)).
+To run the script locally;
 
-If you want to run the script yourself using Github actions you can setup automated downloads as follows;
-
-#### Add API Key
-
-Once you have your key, `NVD_API_key` as a repository variable (settings > secrets > actions) with your NVD API key as the value.
-
-#### Check the Github actions
-
-In `.github/workflows` you will find a number of files
-
-TODO
-
-Ignore, `docs.yml`, this file is used to generate the product docs.
-
-#### 3. Run the Github actions
-
-TODO
-
-### Option 2: Run locally
+### Run locally
 
 This script can be downloaded and run locally as follows;
 
-#### Add API Key
+#### 1. Add API Key
 
 Once you have your key, create a file in the root of this repository by copying the `nvd-credentials.yml.schema` to a new file called `nvd-credentials.yml`. Enter your API key for the variable `nvd_api_key` in this file.
 
-#### Run the script
+#### 2. Run the script
 
 TODO
 
