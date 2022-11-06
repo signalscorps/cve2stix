@@ -2,18 +2,7 @@
 
 ![](/docs/assets/img/stix-cve-graph.png)
 
-Turn CVEs and CPEs in the National Vulnerability database into STIX 2.1 Objects.
-
-cve2stix was designed for two use-cases;
-
-1. to match specific software (CPEs) to new and existing vulnerabilities (CVEs) to alert when vulnerablities exist
-2. to feed Threat Intelligence Platforms with rich vulnerability information for research and analysis.
-
-Use cve2stix to:
-
-* Automatically converting CVEs into STIX format (as Indicators and Vulnerability Objects)
-	* with valid STIX patterns for matching)
-* Automatically converting CPEs into STIX format
+Turn CVEs enriched by the National Vulnerability database into STIX 2.1 Objects.
 
 ## cve2stix-output (avoid having to use this script)
 
