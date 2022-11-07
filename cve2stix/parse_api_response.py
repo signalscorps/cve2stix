@@ -94,6 +94,14 @@ def parse_cve_api_response(cve_content):
                     }
                 ]
 
+            vulnerability_dict["external_references"] += [
+                {
+                    "source_name": "cve2stix",
+                    "description": "This object was created using cve2stix from the Signals Corps.",
+                    "url": "https://github.com/signalscorps/cve2stix",
+                }
+            ]
+
             indicator_dict = None
             if len(cve_item["configurations"]["nodes"]) != 0:
 
@@ -114,6 +122,13 @@ def parse_cve_api_response(cve_content):
                     "valid_from": datetime.strptime(
                         cve_item["publishedDate"], "%Y-%m-%dT%H:%MZ"
                     ),
+                    "external_references": [
+                        {
+                            "source_name": "cve2stix",
+                            "description": "This object was created using cve2stix from the Signals Corps.",
+                            "url": "https://github.com/signalscorps/cve2stix",
+                        }
+                    ],
                     "object_marking_refs": [
                         "marking-definition--613f2e26-407d-48c7-9eca-b8e91df99dc9"
                     ],
@@ -159,6 +174,13 @@ def parse_cve_api_response(cve_content):
                     relationship_type="identifies",
                     source_ref=indicator,
                     target_ref=vulnerability,
+                    external_references=[
+                        {
+                            "source_name": "cve2stix",
+                            "description": "This object was created using cve2stix from the Signals Corps.",
+                            "url": "https://github.com/signalscorps/cve2stix",
+                        }
+                    ],
                 )
             parsed_response.append(
                 {
