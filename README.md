@@ -26,31 +26,24 @@ This script can be downloaded and run locally as follows;
 
 #### 1. Add API Key
 
-Once you have your key, create a file in the root of this repository by copying the `nvd-credentials.yml.schema` to a new file called `nvd-credentials.yml`. Enter your API key for the variable `nvd_api_key` in this file.
+Once you have your key, create a file in the root of this repository by copying the `nvd-credentials.yml.schema` to a new file called `credentials.yml`. Enter your API key for the variable `nvd_api_key` in this file.
 
 #### 2. Run the script
 
-TODO
-
 ```shell
-file2stix --download-settings /path/to/download-settings.yml --match-vulnerabilities
+cve2stix --settings cve-settings.yml
 ```
 
 Where;
 
-* `--download-settings`: Is a `download-settings.yml` that follows the schema defind in `download-settings.yml.schema`, with fields as follows
-	* `--cve-id` (optional, default null): if you only want specific cves, use this flag to download the specific cve. Can be passed more than once.
-	* `--cve-earliest-publish-date` (optional, default; excecution time minus 6 months): the earliest publish date for CVEs returned (in [ISO](https://www.iso.org/iso-8601-date-and-time-format.html) format). For eg., 2022-01-24
-	* `--cve-latest-publish-date` (optional, default; excecution time): the latest publish date for CVEs returned (in [ISO](https://www.iso.org/iso-8601-date-and-time-format.html) format). For eg., 2022-01-24
-	* `--stix2-objects-folder` (optional, default: `stix2_objects`): path to a new or empty
-	folder for storing the downloaded CVEs (and CPEs). `cve2stix` will throw an error
-	if the folder is not empty.
-	* `--cpe-part` (optional, default; `*`): only downloads CVEs with CPE match strings that contain defined cpe part. More than one value can be passed, in which case are treated with logical OR.
-	* `--cpe-vendor` (optional, default; `*`): only downloads CVEs with CPE match strings that contain defined cpe vendor. More than one value can be passed, in which case are treated with logical OR.
-	* `--cpe-product` (optional, default; `*`): only downloads CVEs with CPE match strings that contain defined cpe product. More than one value can be passed, in which case are treated with logical OR.
-	* `cve-cvss3-exploitabilityScore-min` (optional, default; `*`): defines the minimum cvss3.exploitabilityScore in the CVEs to be returned.
-	* `cve-cvss3-impactScore-min` (optional, default; `*`): defines the minimum cvss3.impactScore in the CVEs to be returned. 
-* `--match-vulnerabilities` (optional, default; false): if true, then the CPE match file will be compared to CVEs to generete alerts. If running for the second time with this flag, this will only consider CVEs with update date > last run time.
+* `--settings`: Path to YML file with settings for downloading (updating) cve2stix tool.
+
+The YML settings file has the following fields
+* `earliest-cve-date`: The datetime from which CVEs are downloaded (updated)
+* `latest-cve-date`: The datetime upto which CVEs are downloaded (updated)
+* `run-mode`: Possible value "download" or "update", denoting if new CVEs are to be downloaded or existing CVEs need to be updated.
+* `stix2-objects-folder`: Folder where stix2 objects will be stored.
+* `stix2-bundles-folder`: Folder where stix2 bundles are stored, grouped by CVE year and ID.
 
 ## Documentation
 
