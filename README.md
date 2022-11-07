@@ -16,19 +16,17 @@ To use cve2stix you will need to obtain a free API key from NVD.
 
 ## Usage
 
-This repository has been built with Github actions (to populate [cve2stix-output](https://github.com/signalscorps/cve2stix-output)). If you want to understand how this works, [please read the documentation here](/docs/github-actions).
+The following section describes how to run the script locally once it has been cloned.
+
+This repository has also been built to work with a series Github actions (to populate [cve2stix-output](https://github.com/signalscorps/cve2stix-output)). If you want to understand how these works, [please read the documentation here](/docs/github-actions).
 
 To run the script locally;
 
-### Run locally
-
-This script can be downloaded and run locally as follows;
-
-#### 1. Add API Key
+### 1. Add API Key
 
 Once you have your key, create a file in the root of this repository by copying the `nvd-credentials.yml.schema` to a new file called `credentials.yml`. Enter your API key for the variable `nvd_api_key` in this file.
 
-#### 2. Run the script
+### 2. Run the script
 
 ```shell
 cve2stix --settings cve-settings.yml
@@ -38,12 +36,17 @@ Where;
 
 * `--settings`: Path to YML file with settings for downloading (updating) cve2stix tool.
 
-The YML settings file has the following fields
+Y
+
+The YML settings file has the following fields:
+
 * `earliest-cve-date`: The datetime from which CVEs are downloaded (updated)
 * `latest-cve-date`: The datetime upto which CVEs are downloaded (updated)
 * `run-mode`: Possible value "download" or "update", denoting if new CVEs are to be downloaded or existing CVEs need to be updated.
 * `stix2-objects-folder`: Folder where stix2 objects will be stored.
 * `stix2-bundles-folder`: Folder where stix2 bundles are stored, grouped by CVE year and ID.
+
+[You can see a sample of the yml file schema here](download-settings.yml.schema).
 
 ## Documentation
 
@@ -61,6 +64,10 @@ If you notice a bug or have a feature request, [please submit them as issues on 
 
 [MIT LICENSE](/LICENSE).
 
-## Useful supporting tools
+## A special thanks to...
 
+I would like to thank the authors of the following tools used to build file2stix (making it a hundred times easier to do so);
+
+* [STIX 2](https://pypi.org/project/stix2/): APIs for serializing and de-serializing STIX2 JSON content
+* [STIX 2 Pattern Validator](https://pypi.org/project/stix2-patterns/): a tool for checking the syntax of the Cyber Threat Intelligence (CTI) STIX Pattern expressions
 * [STIX Viewer](https://github.com/traut/stixview): Quickly load bundles produced from your report.
