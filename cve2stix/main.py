@@ -7,6 +7,7 @@ import logging
 import math
 import requests
 import time
+import pytz
 from dateutil.relativedelta import relativedelta
 from stix2 import new_version
 from stix2.exceptions import InvalidValueError
@@ -81,7 +82,7 @@ def update_existing_cve(
             new_relationship = relationship
             if old_relationship != None:
                 new_relationship = new_version(
-                    old_relationship, modified=vulnerability["modified"]
+                    old_relationship, modified=pytz.UTC.localize(vulnerability["modified"])
                 )
             stix_objects.append(new_relationship)
 
