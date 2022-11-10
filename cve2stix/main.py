@@ -75,7 +75,7 @@ def update_existing_cve(
             old_relationship = None
             if existing_cve["relationship"] != None:
                 old_relationship = stix_store.get_object_by_id(
-                    existing_cve.relationship_stix_id
+                    existing_cve["relationship"]["id"]
                 )
 
             new_relationship = relationship
