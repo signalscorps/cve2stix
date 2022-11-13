@@ -29,7 +29,7 @@ def store_new_cve(stix_store, vulnerability, indicator, relationship, cve_item):
         stix_objects.append(relationship)
 
     status = stix_store.store_cve_in_bundle(
-        vulnerability["name"], stix_objects, cve_item
+        vulnerability["name"], stix_objects
     )
     if status == False:
         return False
@@ -88,7 +88,7 @@ def update_existing_cve(
 
         stix_store.store_objects_in_filestore(stix_objects)
         stix_store.store_cve_in_bundle(
-            vulnerability["name"], stix_objects, cve_item, update=True
+            vulnerability["name"], stix_objects, update=True
         )
 
     except InvalidValueError:

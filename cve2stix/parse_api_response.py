@@ -67,6 +67,7 @@ def parse_cve_api_response(cve_content):
                     "extension-definition--b2b5f2cd-49e6-4091-a0e0-c0bb71543e23": {
                         "extension_type": "property-extension",
                         "nvd_cve": cve_item["cve"],
+                        "configurations": cve_item["configurations"],
                         "impact": cve_item["impact"],
                         "publishedDate": cve_item["publishedDate"],
                         "lastModifiedDate": cve_item["lastModifiedDate"],

@@ -92,7 +92,7 @@ class StixStore:
 
     def store_object_in_filestore(self, stix_object):
         try:
-            self.stix_file_store.add(stix_object)
+            self.stix_file_store.add(stix_object, pretty=False)
         except DataSourceError as ex:
             # Ignoring error, since it occurs when file is already
             # present in the file store, which is OK
@@ -142,7 +142,7 @@ class StixStore:
         }
         
 
-    def store_cve_in_bundle(self, cve_id, stix_objects, cve_item, update=False):
+    def store_cve_in_bundle(self, cve_id, stix_objects, update=False):
         # Create a bundle
         bundle_of_all_objects = Bundle(*stix_objects)
 
@@ -151,15 +151,11 @@ class StixStore:
         os.makedirs(stix_bundle_cve_folder, exist_ok=True)
 
         stix_bundle_file = f"{stix_bundle_cve_folder}/stix_bundle.json"
-        nvd_response_file = f"{stix_bundle_cve_folder}/nvd_response.json"
         if os.path.isfile(stix_bundle_file) and update == False:
             return False
 
         with open(stix_bundle_file, "w") as f:
             f.write(json.dumps(bundle_of_all_objects, cls=STIXJSONEncoder, indent=4))
-        
-        with open(nvd_response_file, "w") as f:
-            f.write(json.dumps(cve_item, indent=4))
         
         return True
 
