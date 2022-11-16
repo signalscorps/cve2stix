@@ -10,6 +10,7 @@ import os
 import yaml
 
 import cve2stix
+from cve2stix.enrichment import Enrichment
 from cve2stix.config import (
     STIX2_BUNDLES_FOLDER,
     Config,
@@ -51,6 +52,7 @@ def cli():
     cve_end_date = datetime.now()
     stix2_objects_folder = STIX2_OBJECTS_FOLDER
     stix2_bundles_folder = STIX2_BUNDLES_FOLDER
+    enrichments = False
     run_mode = "download"
 
     with open(args.settings, "r") as stream:
@@ -64,6 +66,8 @@ def cli():
                 stix2_bundles_folder = data.get("stix2-bundles-folder")
             if data.get("run-mode"):
                 run_mode = data.get("run-mode")
+            if data.get("enrichments-folder-path"):
+                enrichments_folder_path = data.get("enrichments-folder-path")
 
         except yaml.YAMLError:
             raise ValueError("Incorrect yaml file in ")
@@ -87,6 +91,7 @@ def cli():
         stix2_bundles_folder=stix2_bundles_folder,
         api_key=api_key,
         run_mode=run_mode,
+        enrichments_folder_path=enrichments_folder_path,
     )
 
     main(config)

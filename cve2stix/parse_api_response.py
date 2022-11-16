@@ -2,14 +2,24 @@
 Helper methods for parsing results from NVD API
 """
 
+from dataclasses import dataclass
 from datetime import datetime
 import json
 import logging
 from stix2 import Vulnerability, Indicator, Relationship
 
 from cve2stix.error_handling import error_logger
+from cve2stix.enrichment import CTIDataset, Enrichment
 
 logger = logging.getLogger(__name__)
+
+
+@dataclass
+class ParsedApiResponse:
+    vulnerability: Vulnerability = None
+    indicator: Indicator = None
+    relationship: Indicator = None
+    enrichment_objects: list = None
 
 
 def build_pattern_for_node(node):
@@ -40,7 +50,50 @@ def build_pattern_for_node(node):
     return f"({pattern})", vulnerable_cpes, all_cpes
 
 
-def parse_cve_api_response(cve_content):
+def _process_enrichment(cve_item, vulnerability, cti_dataset, enrichment):
+    enrichment_objects = []
+
+    for problemtype_data in cve_item["cve"]["problemtype"]["problemtype_data"]:
+        for problem_description in problemtype_data["description"]:
+            cwe_id = problem_description["value"]
+            if cwe_id not in cti_dataset.cwe_id_to_capec_stix_id_map:
+                logger.debug(
+                    "CWE %s in CVE %s is not found in preprocessed CTI dataset",
+                    cwe_id, cve_item.get("cve").get("CVE_data_meta").get("ID"),
+                )
+                
+                error_logger.warning(
+                    "CWE %s in CVE %s is not found in preprocessed CTI dataset",
+                    cwe_id, cve_item.get("cve").get("CVE_data_meta").get("ID"),
+                )
+                continue
+
+            for capec_stix_id in cti_dataset.cwe_id_to_capec_stix_id_map[cwe_id]:
+                capec_attack_pattern = enrichment.capec_fs.get(capec_stix_id)
+                enrichment_objects.append(capec_attack_pattern)
+                enrichment_objects.append(
+                    Relationship(
+                        created=vulnerability["created"],
+                        created_by_ref="identity--748e6444-f073-4c50-b558-f49be8897a81",
+                        modified=vulnerability["modified"],
+                        relationship_type="targets",
+                        source_ref=capec_attack_pattern,
+                        target_ref=vulnerability,
+                        external_references=[
+                            {
+                                "source_name": "cve2stix",
+                                "description": "This object was created using cve2stix from the Signals Corps.",
+                                "url": "https://github.com/signalscorps/cve2stix",
+                            }
+                        ],
+                    )
+                )
+    return enrichment_objects
+
+
+def parse_cve_api_response(
+    cve_content, cti_dataset: CTIDataset, enrichment: Enrichment
+):
     parsed_response = []
     for cve_item in cve_content["result"]["CVE_Items"]:
 
@@ -183,13 +236,14 @@ def parse_cve_api_response(cve_content):
                         }
                     ],
                 )
+
+            # Enrichments
+            enrichment_objects = None
+            if cti_dataset != None:
+                enrichment_objects = _process_enrichment(cve_item, vulnerability, cti_dataset, enrichment)
+
             parsed_response.append(
-                {
-                    "vulnerability": vulnerability,
-                    "indicator": indicator,
-                    "relationship": relationship,
-                    "cve_item": cve_item,
-                }
+                ParsedApiResponse(vulnerability, indicator, relationship, enrichment_objects)
             )
         except:
             logger.warning(

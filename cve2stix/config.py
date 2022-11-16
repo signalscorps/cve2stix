@@ -23,6 +23,7 @@ class Config:
     stix2_bundles_folder: str = STIX2_BUNDLES_FOLDER
     run_mode: str = "download" # or "update"
     api_key: str = None
+    enrichments_folder_path: bool = None
 
     # Constant configs, SHOULD NOT be changed
     nvd_cve_api_endpoint: str = "https://services.nvd.nist.gov/rest/json/cves/1.0/"

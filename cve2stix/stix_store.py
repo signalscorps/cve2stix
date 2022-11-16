@@ -144,7 +144,7 @@ class StixStore:
 
     def store_cve_in_bundle(self, cve_id, stix_objects, update=False):
         # Create a bundle
-        bundle_of_all_objects = Bundle(*stix_objects)
+        bundle_of_all_objects = Bundle(*stix_objects, allow_custom=True)
 
         # Create folder to store CVE
         stix_bundle_cve_folder = self.get_stix_bundle_cve_folder(cve_id)

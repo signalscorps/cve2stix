@@ -8,10 +8,12 @@ import math
 import requests
 import time
 import pytz
+import os
 from dateutil.relativedelta import relativedelta
 from stix2 import new_version
 from stix2.exceptions import InvalidValueError
 
+from cve2stix.enrichment import Enrichment
 from cve2stix.config import Config
 from cve2stix.error_handling import store_error_logs_in_file
 from cve2stix.helper import get_date_string_nvd_format
@@ -21,15 +23,17 @@ from cve2stix.stix_store import StixStore
 logger = logging.getLogger(__name__)
 
 
-def store_new_cve(stix_store, vulnerability, indicator, relationship, cve_item):
-    stix_objects = [vulnerability]
-    if indicator != None:
-        stix_objects.append(indicator)
-    if relationship != None:
-        stix_objects.append(relationship)
+def store_new_cve(stix_store, parsed_response):
+    stix_objects = [parsed_response.vulnerability]
+    if parsed_response.indicator != None:
+        stix_objects.append(parsed_response.indicator)
+    if parsed_response.relationship != None:
+        stix_objects.append(parsed_response.relationship)
+    if parsed_response.enrichment_objects != None:
+        stix_objects += parsed_response.enrichment_objects
 
     status = stix_store.store_cve_in_bundle(
-        vulnerability["name"], stix_objects
+        parsed_response.vulnerability["name"], stix_objects
     )
     if status == False:
         return False
@@ -38,12 +42,10 @@ def store_new_cve(stix_store, vulnerability, indicator, relationship, cve_item):
     return True
 
 
-def update_existing_cve(
-    existing_cve, stix_store, vulnerability, indicator, relationship, cve_item
-):
+def update_existing_cve(existing_cve, stix_store, parsed_response):
     stix_objects = []
     try:
-        vulnerability_dict = json.loads(vulnerability.serialize())
+        vulnerability_dict = json.loads(parsed_response.vulnerability.serialize())
         vulnerability_dict.pop("type", None)
         vulnerability_dict.pop("created", None)
         vulnerability_dict.pop("id", None)
@@ -54,8 +56,8 @@ def update_existing_cve(
         new_vulnerability = new_version(old_vulnerability, **vulnerability_dict)
         stix_objects.append(new_vulnerability)
 
-        if indicator != None:
-            indicator_dict = json.loads(indicator.serialize())
+        if parsed_response.indicator != None:
+            indicator_dict = json.loads(parsed_response.indicator.serialize())
             indicator_dict.pop("type", None)
             indicator_dict.pop("created", None)
             indicator_dict.pop("id", None)
@@ -67,28 +69,34 @@ def update_existing_cve(
                     existing_cve["indicator"]["id"]
                 )
 
-            new_indicator = indicator
+            new_indicator = parsed_response.indicator
             if old_indicator != None:
                 new_indicator = new_version(old_indicator, **indicator_dict)
             stix_objects.append(new_indicator)
 
-        if relationship != None:
+        if parsed_response.relationship != None:
             old_relationship = None
             if existing_cve["relationship"] != None:
                 old_relationship = stix_store.get_object_by_id(
                     existing_cve["relationship"]["id"]
                 )
 
-            new_relationship = relationship
+            new_relationship = parsed_response.relationship
             if old_relationship != None:
                 new_relationship = new_version(
-                    old_relationship, modified=pytz.UTC.localize(vulnerability["modified"])
+                    old_relationship,
+                    modified=pytz.UTC.localize(
+                        parsed_response.vulnerability["modified"]
+                    ),
                 )
             stix_objects.append(new_relationship)
 
+        if parsed_response.enrichment_objects != None:
+            stix_objects += parsed_response.enrichment_objects
+
         stix_store.store_objects_in_filestore(stix_objects)
         stix_store.store_cve_in_bundle(
-            vulnerability["name"], stix_objects, update=True
+            parsed_response.vulnerability["name"], stix_objects, update=True
         )
 
     except InvalidValueError:
@@ -100,8 +108,15 @@ def update_existing_cve(
 
 def main(config: Config):
 
+    cti_dataset = None
+    enrichment = None
+    if config.enrichments_folder_path != None:
+        # Download/update mitre dataset
+        enrichment = Enrichment(config.enrichments_folder_path)
+        cti_dataset = enrichment.preprocess_cti_dataset()
+
     start_date = config.cve_start_date
-    
+
     # Iterate over each month seperately
     while start_date < config.cve_end_date:
 
@@ -163,7 +178,7 @@ def main(config: Config):
                 "Got response from NVD API with status code: %d", response.status_code
             )
 
-            parsed_responses = parse_cve_api_response(content)
+            parsed_responses = parse_cve_api_response(content, cti_dataset, enrichment)
             logger.debug(
                 "Parsed %s CVEs into vulnerability stix objects", len(parsed_responses)
             )
@@ -171,38 +186,25 @@ def main(config: Config):
             total_results = content["totalResults"]
 
             # Store CVEs in database and stix store
-            stix_store = StixStore(config.stix2_objects_folder, config.stix2_bundles_folder)
+            stix_store = StixStore(
+                config.stix2_objects_folder, config.stix2_bundles_folder
+            )
             total_store_count = 0
             total_update_count = 0
 
             for parsed_response in parsed_responses:
-                vulnerability = parsed_response["vulnerability"]
-                indicator = parsed_response["indicator"]
-                relationship = parsed_response["relationship"]
-                cve_item = parsed_response["cve_item"]
-
-                cve = stix_store.get_cve_from_bundle(vulnerability["name"])
+                cve = stix_store.get_cve_from_bundle(parsed_response.vulnerability["name"])
                 if cve == None:
                     # CVE not present, so we download it
                     status = store_new_cve(
                         stix_store,
-                        vulnerability,
-                        indicator,
-                        relationship,
-                        cve_item,
+                        parsed_response,
                     )
                     if status == True:
                         total_store_count += 1
                 else:
                     # CVE already present, so we update it
-                    status = update_existing_cve(
-                        cve,
-                        stix_store,
-                        vulnerability,
-                        indicator,
-                        relationship,
-                        cve_item,
-                    )
+                    status = update_existing_cve(cve, stix_store, parsed_response)
                     if status == True:
                         total_update_count += 1
 
