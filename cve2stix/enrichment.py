@@ -37,6 +37,29 @@ class Enrichment:
         )
         self.capec_fs = FileSystemSource(capec_file_path)
 
+        enterprise_attack_file_path = os.path.join(
+            self.cti_folder_path, Enrichment.MITRE_ENTERPRISE_RELATIVE_PATH
+        )
+        self.enterprise_attack_fs = FileSystemSource(enterprise_attack_file_path)
+
+        mobile_attack_file_path = os.path.join(
+            self.cti_folder_path, Enrichment.MITRE_MOBILE_RELATIVE_PATH
+        )
+        self.mobile_attack_fs = FileSystemSource(mobile_attack_file_path)
+
+        ics_attack_file_path = os.path.join(
+            self.cti_folder_path, Enrichment.MITRE_ICS_RELATIVE_PATH
+        )
+        self.ics_attack_fs = FileSystemSource(ics_attack_file_path)
+
+    def get_attack_stix_object(self, attack_stix_id):
+        attack_pattern = self.enterprise_attack_fs.get(attack_stix_id)
+        if attack_pattern == None:
+            attack_pattern = self.mobile_attack_fs.get(attack_stix_id)
+        if attack_pattern == None:
+            attack_pattern = self.ics_attack_fs.get(attack_stix_id)
+        return attack_pattern
+
     def update_mitre_cti_database(self):
         if os.path.isdir(self.cti_folder_path):
             logger.info(
@@ -57,12 +80,9 @@ class Enrichment:
         capec_stix_id_map = {}
 
         logger.info("Preprocessing CAPEC dataset...")
-        capec_file_path = os.path.join(
-            self.cti_folder_path, Enrichment.MITRE_CAPEC_RELATIVE_PATH
+        capec_attack_patterns = self.capec_fs.query(
+            [Filter("type", "=", "attack-pattern")]
         )
-        capec_fs = FileSystemSource(capec_file_path)
-
-        capec_attack_patterns = capec_fs.query([Filter("type", "=", "attack-pattern")])
 
         # Map between CAPEC name and CAPEC stix id
         for capec_attack_pattern in capec_attack_patterns:
@@ -132,3 +152,10 @@ class CTIDataset:
     capec_id_to_enterprise_attack_map: dict = None
     capec_id_to_mobile_attack_map: dict = None
     capec_id_to_ics_attack_map: dict = None
+
+    def is_capec_id_present_in_attack_dataset(self, capec_id):
+        return (
+            (capec_id in self.capec_id_to_enterprise_attack_map)
+            or (capec_id in self.capec_id_to_mobile_attack_map)
+            or (capec_id in self.capec_id_to_ics_attack_map)
+        )

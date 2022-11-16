@@ -50,7 +50,9 @@ def build_pattern_for_node(node):
     return f"({pattern})", vulnerable_cpes, all_cpes
 
 
-def _process_enrichment(cve_item, vulnerability, cti_dataset, enrichment):
+def _process_enrichment(
+    cve_item, vulnerability, cti_dataset: CTIDataset, enrichment: Enrichment
+):
     enrichment_objects = []
 
     for problemtype_data in cve_item["cve"]["problemtype"]["problemtype_data"]:
@@ -59,12 +61,8 @@ def _process_enrichment(cve_item, vulnerability, cti_dataset, enrichment):
             if cwe_id not in cti_dataset.cwe_id_to_capec_stix_id_map:
                 logger.debug(
                     "CWE %s in CVE %s is not found in preprocessed CTI dataset",
-                    cwe_id, cve_item.get("cve").get("CVE_data_meta").get("ID"),
-                )
-                
-                error_logger.warning(
-                    "CWE %s in CVE %s is not found in preprocessed CTI dataset",
-                    cwe_id, cve_item.get("cve").get("CVE_data_meta").get("ID"),
+                    cwe_id,
+                    cve_item.get("cve").get("CVE_data_meta").get("ID"),
                 )
                 continue
 
@@ -88,6 +86,37 @@ def _process_enrichment(cve_item, vulnerability, cti_dataset, enrichment):
                         ],
                     )
                 )
+
+                capec_id = cti_dataset.stix_id_to_capec_id_map[capec_stix_id]
+                if cti_dataset.is_capec_id_present_in_attack_dataset(capec_id):
+                    attack_stix_ids = (
+                        cti_dataset.capec_id_to_enterprise_attack_map.get(capec_id, [])
+                        + cti_dataset.capec_id_to_mobile_attack_map.get(capec_id, [])
+                        + cti_dataset.capec_id_to_ics_attack_map.get(capec_id, [])
+                    )
+                    for attack_stix_id in attack_stix_ids:
+                        attack_pattern = enrichment.get_attack_stix_object(
+                            attack_stix_id
+                        )
+                        enrichment_objects.append(attack_pattern)
+                        enrichment_objects.append(
+                            Relationship(
+                                created=vulnerability["created"],
+                                created_by_ref="identity--748e6444-f073-4c50-b558-f49be8897a81",
+                                modified=vulnerability["modified"],
+                                relationship_type="targets",
+                                source_ref=attack_pattern,
+                                target_ref=vulnerability,
+                                external_references=[
+                                    {
+                                        "source_name": "cve2stix",
+                                        "description": "This object was created using cve2stix from the Signals Corps.",
+                                        "url": "https://github.com/signalscorps/cve2stix",
+                                    }
+                                ],
+                            )
+                        )
+
     return enrichment_objects
 
 
@@ -240,12 +269,17 @@ def parse_cve_api_response(
             # Enrichments
             enrichment_objects = None
             if cti_dataset != None:
-                enrichment_objects = _process_enrichment(cve_item, vulnerability, cti_dataset, enrichment)
+                enrichment_objects = _process_enrichment(
+                    cve_item, vulnerability, cti_dataset, enrichment
+                )
 
             parsed_response.append(
-                ParsedApiResponse(vulnerability, indicator, relationship, enrichment_objects)
+                ParsedApiResponse(
+                    vulnerability, indicator, relationship, enrichment_objects
+                )
             )
         except:
+            raise
             logger.warning(
                 "An unexpected error occurred when parsing %s",
                 cve_item.get("cve").get("CVE_data_meta").get("ID"),
