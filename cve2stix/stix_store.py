@@ -159,3 +159,20 @@ class StixStore:
         
         return True
 
+    def store_cpe_in_bundle(self, stix_objects, update=False):
+
+        # Create a bundle
+        bundle_of_all_objects = Bundle(*stix_objects)
+
+        # Create folder to store CVE
+        os.makedirs(self.stix_bundle_path, exist_ok=True)
+
+        stix_bundle_file = f"{self.stix_bundle_path}/{bundle_of_all_objects.id}.json"
+        if os.path.isfile(stix_bundle_file) and update == False:
+            return False
+
+        with open(stix_bundle_file, "w") as f:
+            f.write(json.dumps(bundle_of_all_objects, cls=STIXJSONEncoder, indent=4))
+
+        return True
+

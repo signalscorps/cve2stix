@@ -6,7 +6,7 @@ from dataclasses import dataclass
 from datetime import datetime
 import json
 import logging
-from stix2 import Vulnerability, Indicator, Relationship
+from stix2 import Vulnerability, Indicator, Relationship, Software
 
 from cve2stix.error_handling import error_logger
 from cve2stix.enrichment import CTIDataset, Enrichment
@@ -16,10 +16,10 @@ logger = logging.getLogger(__name__)
 
 @dataclass
 class ParsedApiResponse:
-    vulnerability: Vulnerability = None
-    indicator: Indicator = None
-    relationship: Indicator = None
-    enrichment_objects: list = None
+    vulnerability: Vulnerability | None = None
+    indicator: Indicator | None = None
+    relationship: Relationship | None = None
+    enrichment_objects: list | None = None
 
 
 def build_pattern_for_node(node):
@@ -51,8 +51,11 @@ def build_pattern_for_node(node):
 
 
 def _process_enrichment(
-    cve_item, vulnerability, cti_dataset: CTIDataset, enrichment: Enrichment
+    cve_item, vulnerability, cti_dataset: CTIDataset, enrichment: Enrichment | None
 ):
+    if enrichment == None:
+        raise ValueError("Enrichment variable should not be None")
+
     enrichment_objects = []
 
     for problemtype_data in cve_item["cve"]["problemtype"]["problemtype_data"]:
@@ -121,7 +124,7 @@ def _process_enrichment(
 
 
 def parse_cve_api_response(
-    cve_content, cti_dataset: CTIDataset, enrichment: Enrichment
+    cve_content, cti_dataset: CTIDataset | None, enrichment: Enrichment | None
 ):
     parsed_response = []
     for cve_item in cve_content["result"]["CVE_Items"]:
@@ -293,5 +296,30 @@ def parse_cve_api_response(
                     "The pattern field:\n%s", indicator_dict["pattern"]
                 )
             error_logger.warning("CVE item is:\n%s", json.dumps(cve_item))
+
+    return parsed_response
+
+
+def parse_cpe_api_response(cpe_content):
+    parsed_response = []
+    for cpe_item in cpe_content["result"]["cpes"]:
+
+        software_dict = {
+            "name": cpe_item["titles"][0]["title"],
+            "cpe": cpe_item["cpe23Uri"],
+            "version": cpe_item["cpe23Uri"].split(":")[5],
+            "vendor": cpe_item["cpe23Uri"].split(":")[3],
+            "languages": cpe_item["titles"][0]["lang"],
+            # "revoked": cpe_item["deprecated"],
+            "extensions": {
+                "extension-definition--6c453e0f-9895-498f-a273-2e2dda473377": {
+                    "extension_type": "property-extension",
+                    "nvd_cpe": cpe_item,
+                }
+            },
+        }
+
+        software = Software(**software_dict)
+        parsed_response.append(software)
 
     return parsed_response

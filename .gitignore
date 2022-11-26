@@ -141,8 +141,6 @@ credentials.yml
 # Ignore TODO.txt
 TODO.txt
 
-# Ignore stix2_objects
-# stix2_objects/
-
-# Ignore stix2-enrichments
-stix2_enrichments
+# Ignore stix2 object folders
+CVEs/
+CPEs/

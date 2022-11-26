@@ -35,21 +35,25 @@ class Enrichment:
         capec_file_path = os.path.join(
             self.cti_folder_path, Enrichment.MITRE_CAPEC_RELATIVE_PATH
         )
+        os.makedirs(capec_file_path, exist_ok=True)
         self.capec_fs = FileSystemSource(capec_file_path)
 
         enterprise_attack_file_path = os.path.join(
             self.cti_folder_path, Enrichment.MITRE_ENTERPRISE_RELATIVE_PATH
         )
+        os.makedirs(enterprise_attack_file_path, exist_ok=True)
         self.enterprise_attack_fs = FileSystemSource(enterprise_attack_file_path)
 
         mobile_attack_file_path = os.path.join(
             self.cti_folder_path, Enrichment.MITRE_MOBILE_RELATIVE_PATH
         )
+        os.makedirs(mobile_attack_file_path, exist_ok=True)
         self.mobile_attack_fs = FileSystemSource(mobile_attack_file_path)
 
         ics_attack_file_path = os.path.join(
             self.cti_folder_path, Enrichment.MITRE_ICS_RELATIVE_PATH
         )
+        os.makedirs(ics_attack_file_path, exist_ok=True)
         self.ics_attack_fs = FileSystemSource(ics_attack_file_path)
 
     def get_attack_stix_object(self, attack_stix_id):
