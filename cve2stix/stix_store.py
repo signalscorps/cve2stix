@@ -120,7 +120,7 @@ class StixStore:
         stix_bundle_file = f"{stix_bundle_cve_folder}/stix_bundle.json"
         if os.path.isfile(stix_bundle_file) == False:
             return None
-        
+
         memory_store = MemoryStore()
         memory_store.load_from_file(stix_bundle_file)
         vulnerabilities = memory_store.query([Filter("type", "=", "vulnerability")])
@@ -134,13 +134,12 @@ class StixStore:
             indicator = indicators[0]
         if relationships != None and len(relationships) > 0:
             relationship = relationships[0]
-        
+
         return {
             "vulnerability": vulnerability,
             "indicator": indicator,
-            "relationship": relationship
+            "relationship": relationship,
         }
-        
 
     def store_cve_in_bundle(self, cve_id, stix_objects, update=False):
         # Create a bundle
@@ -156,14 +155,30 @@ class StixStore:
 
         with open(stix_bundle_file, "w") as f:
             f.write(json.dumps(bundle_of_all_objects, cls=STIXJSONEncoder, indent=4))
-        
+
         return True
+
+    def delete_cpe_software(self, cpe_stix_id):
+        # CPE Path
+        cpe_software_path = os.path.join(
+            self.file_store_path, "software", f"{cpe_stix_id}.json"
+        )
+        try:
+            print(cpe_software_path)
+            os.remove(cpe_software_path)
+        except:
+            # Silently ignore in case file is not present
+            pass
+
+    def force_update_cpe_software(self, software):
+        self.delete_cpe_software(software.id)
+        self.store_object_in_filestore(software)
 
     # def get_cpe_from_bundle(self, bundle_id: str):
     #     stix_bundle_file = f"{self.stix_bundle_path}/{bundle_id}.json"
     #     if os.path.isfile(stix_bundle_file) == False:
     #         return None
-        
+
     #     memory_store = MemoryStore()
     #     memory_store.load_from_file(stix_bundle_file)
     #     softwares = memory_store.query([Filter("type", "=", "software")])
@@ -186,4 +201,3 @@ class StixStore:
     #         f.write(json.dumps(bundle_of_all_objects, cls=STIXJSONEncoder, indent=4))
 
     #     return bundle_of_all_objects.id
-

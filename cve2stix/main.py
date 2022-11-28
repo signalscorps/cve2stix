@@ -201,7 +201,7 @@ def cve_main(config: Config):
             # Store CVEs in stix store
             for parsed_response in parsed_responses:
                 cve = stix_store.get_cve_from_bundle(
-                    parsed_response.vulnerability["name"]
+                    parsed_response.vulnerability.name
                 )
                 if cve == None:
                     # CVE not present, so we download it
@@ -303,8 +303,7 @@ def cpe_main(config: Config):
         # Store CPEs in stix store
         for software in parsed_responses:
             # CVE not present, so we download it
-            stix_objects = [software]
-            stix_store.store_objects_in_filestore(stix_objects)
+            stix_store.force_update_cpe_software(software)
             total_store_count += 1
 
         # Store CPEs in database

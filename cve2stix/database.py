@@ -7,6 +7,7 @@ This will be useful for storing CVEs and CPEs.
 from peewee import SqliteDatabase, Model, CharField
 from stix2 import Software
 import logging
+import json
 
 from cve2stix.parse_api_response import ParsedApiResponse
 from cve2stix.stix_store import StixStore
@@ -70,10 +71,12 @@ def store_cves_in_database(
                     # Add reference in CPE
                     software = cpe_stix_store.get_object_by_id(cpe_instance.cpe_stix_id)
                     if software != None:
-                        software.extensions[
+                        software_dict = json.loads(software.serialize())
+                        software_dict["extensions"][
                             "extension-definition--fb94b74d-b549-4ebd-8fca-f64ee8958904"
                         ]["cve_ids_refs"] += [parsed_response.vulnerability.id]
-                        cpe_stix_store.store_objects_in_filestore([software])
+                        new_software = Software(**software_dict)
+                        cpe_stix_store.force_update_cpe_software(new_software)
                     else:
                         logger.error(
                             "While adding %s ref, CPE %s was not found",
