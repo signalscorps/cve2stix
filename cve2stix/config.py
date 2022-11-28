@@ -72,3 +72,7 @@ class Config:
     @property
     def cpe_stix2_bundles_folder(self):
         return os.path.join(self.cpe_folder_path, "stix2_bundles")
+
+    @property
+    def cpe_stix2_bundles_relative_path(self):
+        return 

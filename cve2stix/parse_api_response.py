@@ -16,7 +16,7 @@ logger = logging.getLogger(__name__)
 
 @dataclass
 class ParsedApiResponse:
-    vulnerability: Vulnerability | None = None
+    vulnerability: Vulnerability
     indicator: Indicator | None = None
     relationship: Relationship | None = None
     enrichment_objects: list | None = None
@@ -125,7 +125,7 @@ def _process_enrichment(
 
 def parse_cve_api_response(
     cve_content, cti_dataset: CTIDataset | None, enrichment: Enrichment | None
-):
+) -> list[ParsedApiResponse]:
     parsed_response = []
     for cve_item in cve_content["result"]["CVE_Items"]:
 
@@ -244,7 +244,9 @@ def parse_cve_api_response(
                     "extension-definition--b463c449-d022-48b7-b464-3e9c7ec5cf16": {
                         "extension_type": "property-extension",
                         "all_cpe23uris": list(set(all_cpes)),
-                        "vulnerable_cpeid": list(set(vulnerable_cpes)),
+                        "all_cpe23uris_refs": [],
+                        "vulnerable_cpe23uris": list(set(vulnerable_cpes)),
+                        "vulnerable_cpe23uris_refs": [],
                     }
                 }
 
@@ -312,10 +314,14 @@ def parse_cpe_api_response(cpe_content):
             "languages": cpe_item["titles"][0]["lang"],
             # "revoked": cpe_item["deprecated"],
             "extensions": {
+                "extension-definition--fb94b74d-b549-4ebd-8fca-f64ee8958904": {
+                    "extension_type": "property-extension",
+                    "cve_ids_refs": [],
+                },
                 "extension-definition--6c453e0f-9895-498f-a273-2e2dda473377": {
                     "extension_type": "property-extension",
                     "nvd_cpe": cpe_item,
-                }
+                },
             },
         }
 

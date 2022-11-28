@@ -159,20 +159,31 @@ class StixStore:
         
         return True
 
-    def store_cpe_in_bundle(self, stix_objects, update=False):
+    # def get_cpe_from_bundle(self, bundle_id: str):
+    #     stix_bundle_file = f"{self.stix_bundle_path}/{bundle_id}.json"
+    #     if os.path.isfile(stix_bundle_file) == False:
+    #         return None
+        
+    #     memory_store = MemoryStore()
+    #     memory_store.load_from_file(stix_bundle_file)
+    #     softwares = memory_store.query([Filter("type", "=", "software")])
 
-        # Create a bundle
-        bundle_of_all_objects = Bundle(*stix_objects)
+    #     return softwares[0]
 
-        # Create folder to store CVE
-        os.makedirs(self.stix_bundle_path, exist_ok=True)
+    # def store_cpe_in_bundle(self, stix_objects, update=False):
 
-        stix_bundle_file = f"{self.stix_bundle_path}/{bundle_of_all_objects.id}.json"
-        if os.path.isfile(stix_bundle_file) and update == False:
-            return False
+    #     # Create a bundle
+    #     bundle_of_all_objects = Bundle(*stix_objects)
 
-        with open(stix_bundle_file, "w") as f:
-            f.write(json.dumps(bundle_of_all_objects, cls=STIXJSONEncoder, indent=4))
+    #     # Create folder to store CVE
+    #     os.makedirs(self.stix_bundle_path, exist_ok=True)
 
-        return True
+    #     stix_bundle_file = f"{self.stix_bundle_path}/{bundle_of_all_objects.id}.json"
+    #     if os.path.isfile(stix_bundle_file) and update == False:
+    #         return None
+
+    #     with open(stix_bundle_file, "w") as f:
+    #         f.write(json.dumps(bundle_of_all_objects, cls=STIXJSONEncoder, indent=4))
+
+    #     return bundle_of_all_objects.id
 

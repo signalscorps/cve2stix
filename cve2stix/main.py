@@ -13,8 +13,9 @@ from dateutil.relativedelta import relativedelta
 from stix2 import new_version
 from stix2.exceptions import InvalidValueError
 
-from cve2stix.enrichment import Enrichment
 from cve2stix.config import Config
+from cve2stix.database import store_cves_in_database, store_cpes_in_database
+from cve2stix.enrichment import Enrichment
 from cve2stix.error_handling import store_error_logs_in_file
 from cve2stix.helper import get_date_string_nvd_format
 from cve2stix.parse_api_response import parse_cve_api_response, parse_cpe_api_response
@@ -185,13 +186,19 @@ def cve_main(config: Config):
 
             total_results = content["totalResults"]
 
-            # Store CVEs in database and stix store
+            # Store CVEs in database
+            cpe_stix_store = StixStore(
+                config.cpe_stix2_objects_folder, config.cpe_stix2_bundles_folder
+            )
+            store_cves_in_database(parsed_responses, cpe_stix_store)
+
             stix_store = StixStore(
                 config.cve_stix2_objects_folder, config.cve_stix2_bundles_folder
             )
             total_store_count = 0
             total_update_count = 0
 
+            # Store CVEs in stix store
             for parsed_response in parsed_responses:
                 cve = stix_store.get_cve_from_bundle(
                     parsed_response.vulnerability["name"]
@@ -226,17 +233,6 @@ def cve_main(config: Config):
             time.sleep(5)
 
     store_error_logs_in_file()
-
-
-def store_new_cpe(stix_store: StixStore, software):
-    stix_objects = [software]
-
-    status = stix_store.store_cpe_in_bundle(stix_objects, update=True)
-    if status == False:
-        return False
-
-    stix_store.store_objects_in_filestore(stix_objects)
-    return True
 
 
 def cpe_main(config: Config):
@@ -299,17 +295,20 @@ def cpe_main(config: Config):
 
         total_results = content["totalResults"]
 
-        # Store CPEs in database and stix store
         stix_store = StixStore(
             config.cpe_stix2_objects_folder, config.cpe_stix2_bundles_folder
         )
         total_store_count = 0
 
+        # Store CPEs in stix store
         for software in parsed_responses:
             # CVE not present, so we download it
-            status = store_new_cpe(stix_store, software)
-            if status == True:
-                total_store_count += 1
+            stix_objects = [software]
+            stix_store.store_objects_in_filestore(stix_objects)
+            total_store_count += 1
+
+        # Store CPEs in database
+        store_cpes_in_database(parsed_responses)
 
         logger.info(
             "Downloaded %d cpes",

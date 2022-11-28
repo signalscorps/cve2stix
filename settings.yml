@@ -1,7 +1,7 @@
 
-type: cpe
-start-date: 2022-11-19
-end-date: 2022-11-25
+type: cve
+start-date: 2022-10-01
+end-date: 2022-10-07
 cve-run-mode: "download"
 cve-enrichment: True
 cve-folder-path: "CVEs"
