@@ -30,6 +30,9 @@ The structure is as follows;
 	* `relationship`
 		* `relationship-ID`
 			* `version`
+	* `software`
+		* `software-ID`
+			* `version`
 * `stix2_bundles/`
 	* `YEAR`
 		* `<XXXX>`
