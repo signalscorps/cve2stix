@@ -7,6 +7,7 @@ from dataclasses import dataclass
 import git
 import logging
 import os
+from typing import Dict
 
 from stix2 import FileSystemSource, Filter
 
@@ -147,11 +148,11 @@ class Enrichment:
 
 @dataclass
 class CTIDataset:
-    cwe_id_to_capec_stix_id_map: dict = None
-    stix_id_to_capec_id_map: dict = None
-    capec_id_to_enterprise_attack_map: dict = None
-    capec_id_to_mobile_attack_map: dict = None
-    capec_id_to_ics_attack_map: dict = None
+    cwe_id_to_capec_stix_id_map: Dict = None
+    stix_id_to_capec_id_map: Dict = None
+    capec_id_to_enterprise_attack_map: Dict = None
+    capec_id_to_mobile_attack_map: Dict = None
+    capec_id_to_ics_attack_map: Dict = None
 
     def is_capec_id_present_in_attack_dataset(self, capec_id):
         return (

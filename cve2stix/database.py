@@ -8,6 +8,7 @@ from peewee import SqliteDatabase, Model, CharField
 from stix2 import Software
 import logging
 import re
+from typing import List
 
 from cve2stix.cve import CVE
 from cve2stix.error_handling import error_logger
@@ -40,7 +41,7 @@ def regexp(expr, s):
     return re.search(expr, s) is not None
 
 # Database helper methods
-def store_cves_in_database(parsed_responses: list[CVE], stix_store: StixStore):
+def store_cves_in_database(parsed_responses: List[CVE], stix_store: StixStore):
     for parsed_response in parsed_responses:
         STIX_CVE.get_or_create(
             cve_name=parsed_response.vulnerability.name,
@@ -99,7 +100,7 @@ def store_cves_in_database(parsed_responses: list[CVE], stix_store: StixStore):
                     ]["vulnerable_cpe23uris_refs"] += temp_cpe23Uri_ref[cpe23Uri]
 
 
-def store_cpes_in_database(parsed_responses: list[Software], stix_store):
+def store_cpes_in_database(parsed_responses: List[Software], stix_store):
     for software in parsed_responses:
         STIX_CPE.get_or_create(
             cpe23uri=software.cpe,
