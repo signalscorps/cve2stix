@@ -43,7 +43,7 @@ def build_pattern_for_node(node):
 
 
 def _process_enrichment(
-    cve_item, vulnerability, cti_dataset: CTIDataset, enrichment: Enrichment | None
+    cve_item, vulnerability, cti_dataset: CTIDataset, enrichment: "Enrichment | None"
 ):
     if enrichment == None:
         raise ValueError("Enrichment variable should not be None")
@@ -117,7 +117,7 @@ def _process_enrichment(
 
 
 def parse_cve_api_response(
-    cve_content, cti_dataset: CTIDataset | None, enrichment: Enrichment | None
+    cve_content, cti_dataset: "CTIDataset | None", enrichment: "Enrichment | None"
 ) -> list[CVE]:
     parsed_response = []
     for cve_item in cve_content["result"]["CVE_Items"]:
