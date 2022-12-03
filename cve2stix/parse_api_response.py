@@ -6,6 +6,7 @@ from datetime import datetime
 import json
 import logging
 from stix2 import Vulnerability, Indicator, Relationship, Software
+from typing import List
 
 from cve2stix.cve import CVE
 from cve2stix.error_handling import error_logger
@@ -118,7 +119,7 @@ def _process_enrichment(
 
 def parse_cve_api_response(
     cve_content, cti_dataset: "CTIDataset | None", enrichment: "Enrichment | None"
-) -> list[CVE]:
+) -> List[CVE]:
     parsed_response = []
     for cve_item in cve_content["result"]["CVE_Items"]:
 
