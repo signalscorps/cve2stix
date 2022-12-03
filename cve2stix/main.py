@@ -102,15 +102,13 @@ def cve_main(config: Config):
 
             total_results = content["totalResults"]
 
-            # Store CVEs in database
-            # cpe_stix_store = StixStore(
-            #     config.cpe_stix2_objects_folder, config.cpe_stix2_bundles_folder
-            # )
-            # store_cves_in_database(parsed_responses, cpe_stix_store)
-
             stix_store = StixStore(
                 config.stix2_objects_folder, config.stix2_bundles_folder
             )
+
+            # Store CVEs in database
+            store_cves_in_database(parsed_responses, stix_store)
+
             total_store_count = 0
             total_update_count = 0
 
@@ -212,6 +210,9 @@ def cpe_main(config: Config):
         stix_store = StixStore(
             config.stix2_objects_folder, config.stix2_bundles_folder
         )
+        # Store CPEs in database
+        store_cpes_in_database(parsed_responses, stix_store)
+
         total_store_count = 0
 
         # Store CPEs in stix store
@@ -219,12 +220,6 @@ def cpe_main(config: Config):
             # CVE not present, so we download it
             stix_store.force_update_cpe_software(software)
             total_store_count += 1
-
-        # Store CPEs in database
-        # cve_stix_store = StixStore(
-        #     config.cve_stix2_objects_folder, config.cve_stix2_bundles_folder
-        # )
-        # store_cpes_in_database(parsed_responses, cve_stix_store)
 
         logger.info(
             "Downloaded %d cpes",
