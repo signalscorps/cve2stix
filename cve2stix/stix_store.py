@@ -9,7 +9,15 @@ from stix2 import FileSystemStore, Filter, Bundle, MemoryStore
 from stix2.base import STIXJSONEncoder
 from stix2.datastore import DataSourceError
 
+from cve2stix.cve import CVE
+
 logger = logging.getLogger(__name__)
+
+
+def get_first_item_safely(list):
+    if list != None and len(list) > 0:
+        return list[0]
+    return None
 
 
 class StixStore:
@@ -91,6 +99,9 @@ class StixStore:
             self.store_object_in_filestore(stix_object)
 
     def store_object_in_filestore(self, stix_object):
+        if stix_object == None:
+            logger.debug("Tried storing None object in store, ignoring it..")
+            return
         try:
             self.stix_file_store.add(stix_object, pretty=False)
         except DataSourceError as ex:
@@ -125,21 +136,35 @@ class StixStore:
         memory_store.load_from_file(stix_bundle_file)
         vulnerabilities = memory_store.query([Filter("type", "=", "vulnerability")])
         indicators = memory_store.query([Filter("type", "=", "indicator")])
-        relationships = memory_store.query([Filter("type", "=", "relationship")])
+        identifies_relationships = memory_store.query(
+            [
+                Filter("type", "=", "relationship"),
+                Filter("relationship_type", "=", "identifies"),
+            ]
+        )
+        enrichment_attack_patterns = memory_store.query(
+            [Filter("type", "=", "attack-pattern")]
+        )
+        enrichment_relationships = memory_store.query(
+            [
+                Filter("type", "=", "relationship"),
+                Filter("relationship_type", "=", "targets"),
+            ]
+        )
+        softwares = memory_store.query([Filter("type", "=", "software")])
 
-        vulnerability = vulnerabilities[0]
-        indicator = None
-        relationship = None
-        if indicators != None and len(indicators) > 0:
-            indicator = indicators[0]
-        if relationships != None and len(relationships) > 0:
-            relationship = relationships[0]
+        vulnerability = get_first_item_safely(vulnerabilities)
+        indicator = get_first_item_safely(indicators)
+        identifies_relationship = get_first_item_safely(identifies_relationships)
 
-        return {
-            "vulnerability": vulnerability,
-            "indicator": indicator,
-            "relationship": relationship,
-        }
+        return CVE(
+            vulnerability=vulnerability,
+            indicator=indicator,
+            identifies_relationship=identifies_relationship,
+            enrichment_attack_patterns=enrichment_attack_patterns,
+            enrichment_relationships=enrichment_relationships,
+            softwares=softwares,
+        )
 
     def store_cve_in_bundle(self, cve_id, stix_objects, update=False):
         # Create a bundle
@@ -164,7 +189,6 @@ class StixStore:
             self.file_store_path, "software", f"{cpe_stix_id}.json"
         )
         try:
-            print(cpe_software_path)
             os.remove(cpe_software_path)
         except:
             # Silently ignore in case file is not present

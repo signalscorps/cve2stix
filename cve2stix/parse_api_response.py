@@ -2,24 +2,16 @@
 Helper methods for parsing results from NVD API
 """
 
-from dataclasses import dataclass
 from datetime import datetime
 import json
 import logging
 from stix2 import Vulnerability, Indicator, Relationship, Software
 
+from cve2stix.cve import CVE
 from cve2stix.error_handling import error_logger
 from cve2stix.enrichment import CTIDataset, Enrichment
 
 logger = logging.getLogger(__name__)
-
-
-@dataclass
-class ParsedApiResponse:
-    vulnerability: Vulnerability
-    indicator: Indicator | None = None
-    relationship: Relationship | None = None
-    enrichment_objects: list | None = None
 
 
 def build_pattern_for_node(node):
@@ -56,7 +48,8 @@ def _process_enrichment(
     if enrichment == None:
         raise ValueError("Enrichment variable should not be None")
 
-    enrichment_objects = []
+    enrichment_attack_patterns = []
+    enrichment_relationships = []
 
     for problemtype_data in cve_item["cve"]["problemtype"]["problemtype_data"]:
         for problem_description in problemtype_data["description"]:
@@ -71,8 +64,8 @@ def _process_enrichment(
 
             for capec_stix_id in cti_dataset.cwe_id_to_capec_stix_id_map[cwe_id]:
                 capec_attack_pattern = enrichment.capec_fs.get(capec_stix_id)
-                enrichment_objects.append(capec_attack_pattern)
-                enrichment_objects.append(
+                enrichment_attack_patterns.append(capec_attack_pattern)
+                enrichment_relationships.append(
                     Relationship(
                         created=vulnerability["created"],
                         created_by_ref="identity--748e6444-f073-4c50-b558-f49be8897a81",
@@ -101,8 +94,8 @@ def _process_enrichment(
                         attack_pattern = enrichment.get_attack_stix_object(
                             attack_stix_id
                         )
-                        enrichment_objects.append(attack_pattern)
-                        enrichment_objects.append(
+                        enrichment_attack_patterns.append(attack_pattern)
+                        enrichment_relationships.append(
                             Relationship(
                                 created=vulnerability["created"],
                                 created_by_ref="identity--748e6444-f073-4c50-b558-f49be8897a81",
@@ -120,12 +113,12 @@ def _process_enrichment(
                             )
                         )
 
-    return enrichment_objects
+    return enrichment_attack_patterns, enrichment_relationships
 
 
 def parse_cve_api_response(
     cve_content, cti_dataset: CTIDataset | None, enrichment: Enrichment | None
-) -> list[ParsedApiResponse]:
+) -> list[CVE]:
     parsed_response = []
     for cve_item in cve_content["result"]["CVE_Items"]:
 
@@ -272,15 +265,23 @@ def parse_cve_api_response(
                 )
 
             # Enrichments
-            enrichment_objects = None
+            enrichment_attack_patterns = []
+            enrichment_relationships = []
             if cti_dataset != None:
-                enrichment_objects = _process_enrichment(
+                (
+                    enrichment_attack_patterns,
+                    enrichment_relationships,
+                ) = _process_enrichment(
                     cve_item, vulnerability, cti_dataset, enrichment
                 )
 
             parsed_response.append(
-                ParsedApiResponse(
-                    vulnerability, indicator, relationship, enrichment_objects
+                CVE(
+                    vulnerability=vulnerability,
+                    indicator=indicator,
+                    identifies_relationship=relationship,
+                    enrichment_attack_patterns=enrichment_attack_patterns,
+                    enrichment_relationships=enrichment_relationships,
                 )
             )
         except:
@@ -313,16 +314,6 @@ def parse_cpe_api_response(cpe_content):
             "vendor": cpe_item["cpe23Uri"].split(":")[3],
             "languages": cpe_item["titles"][0]["lang"],
             # "revoked": cpe_item["deprecated"],
-            "extensions": {
-                "extension-definition--fb94b74d-b549-4ebd-8fca-f64ee8958904": {
-                    "extension_type": "property-extension",
-                    "cve_ids_refs": [],
-                },
-                "extension-definition--6c453e0f-9895-498f-a273-2e2dda473377": {
-                    "extension_type": "property-extension",
-                    "nvd_cpe": cpe_item,
-                },
-            },
         }
 
         software = Software(**software_dict)

@@ -9,7 +9,7 @@ from stix2 import Software
 import logging
 import json
 
-from cve2stix.parse_api_response import ParsedApiResponse
+from cve2stix.cve import CVE
 from cve2stix.stix_store import StixStore
 
 logger = logging.getLogger(__name__)
@@ -21,12 +21,12 @@ class BaseModel(Model):
         database = db
 
 
-class CVE(BaseModel):
+class STIX_CVE(BaseModel):
     cve_name = CharField(unique=True)
     cve_stix_id = CharField()
 
 
-class CPE(BaseModel):
+class STIX_CPE(BaseModel):
     cpe23uri = CharField(unique=True)
     cpe_stix_id = CharField()
     # cpe_bundle_id = CharField()
@@ -40,14 +40,14 @@ class Inconsistency(BaseModel):
 
 # Connect to database and create database tables
 db.connect()
-db.create_tables([CVE, CPE, Inconsistency])
+db.create_tables([STIX_CVE, STIX_CPE, Inconsistency])
 
 # Database helper methods
 def store_cves_in_database(
-    parsed_responses: list[ParsedApiResponse], cpe_stix_store: StixStore
+    parsed_responses: list[CVE], cpe_stix_store: StixStore
 ):
     for parsed_response in parsed_responses:
-        CVE.get_or_create(
+        STIX_CVE.get_or_create(
             cve_name=parsed_response.vulnerability.name,
             defaults={"cve_stix_id": parsed_response.vulnerability.id},
         )
@@ -61,22 +61,17 @@ def store_cves_in_database(
             for cpe23Uri in parsed_response.indicator.extensions[
                 "extension-definition--b463c449-d022-48b7-b464-3e9c7ec5cf16"
             ]["all_cpe23uris"]:
-                cpe_instance = CPE.get_or_none(CPE.cpe23uri == cpe23Uri)
+                cpe_instance = STIX_CPE.get_or_none(STIX_CPE.cpe23uri == cpe23Uri)
                 if cpe_instance != None:
                     temp_cpe23Uri_ref[cpe_instance.cpe23uri] = cpe_instance.cpe_stix_id
                     parsed_response.indicator.extensions[
                         "extension-definition--b463c449-d022-48b7-b464-3e9c7ec5cf16"
                     ]["all_cpe23uris_refs"] += [cpe_instance.cpe_stix_id]
 
-                    # Add reference in CPE
+                    # Add CPE software object in CVE
                     software = cpe_stix_store.get_object_by_id(cpe_instance.cpe_stix_id)
                     if software != None:
-                        software_dict = json.loads(software.serialize())
-                        software_dict["extensions"][
-                            "extension-definition--fb94b74d-b549-4ebd-8fca-f64ee8958904"
-                        ]["cve_ids_refs"] += [parsed_response.vulnerability.id]
-                        new_software = Software(**software_dict)
-                        cpe_stix_store.force_update_cpe_software(new_software)
+                        parsed_response.softwares += [software]
                     else:
                         logger.error(
                             "While adding %s ref, CPE %s was not found",
@@ -102,12 +97,29 @@ def store_cves_in_database(
                     ]["vulnerable_cpe23uris_refs"] += [temp_cpe23Uri_ref[cpe23Uri]]
 
 
-def store_cpes_in_database(parsed_responses: list[Software]):
+def store_cpes_in_database(parsed_responses: list[Software], cve_stix_store):
     for software in parsed_responses:
-        CPE.get_or_create(
+        STIX_CPE.get_or_create(
             cpe23uri=software.cpe,
             defaults={
                 "cpe_stix_id": software.id,
             },
         )
+
+        software_dict = json.loads(software.serialize())
+
         # TODO: Add references to CVEs based on entries in Inconsistency table
+        for inconsistent_pair in Inconsistency.select().where(
+            Inconsistency.cpe23uri == software.cpe
+        ):
+            cve_name = inconsistent_pair.cve_name
+            cve_stix_id = STIX_CVE.get_or_none(STIX_CVE.cve_name == cve_name)
+            if cve_stix_id == None:
+                # TODO: ERROR
+                continue
+
+            existing_cve = cve_stix_store.get_cve_from_bundle(cve_name)
+            
+
+        # Delete cpe from inconsistent table
+        Inconsistency.delete().where(Inconsistency.cpe23uri == software.cpe).execute()

@@ -142,6 +142,7 @@ credentials.yml
 TODO.txt
 
 # Ignore stix2 object folders and sqlite database file
-CVEs/
-CPEs/
+stix2_objects/
+stix2_bundles/
+stix2_enrichments/
 state.db

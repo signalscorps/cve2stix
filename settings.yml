@@ -3,6 +3,6 @@ type: cve
 start-date: 2022-10-01
 end-date: 2022-10-07
 cve-run-mode: "download"
-cve-enrichment: True
-cve-folder-path: "CVEs"
-cpe-folder-path: "CPEs"
+stix2-objects-folder: "stix2_objects"
+stix2-bundles-folder: "stix2_bundles"
+stix2-enrichments-folder: "stix2_enrichments"

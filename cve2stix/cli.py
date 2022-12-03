@@ -11,6 +11,9 @@ import cve2stix
 from cve2stix.config import (
     Config,
     CREDENTIALS_FILE_PATH,
+    STIX2_OBJECTS_FOLDER,
+    STIX2_BUNDLES_FOLDER,
+    STIX2_ENRICHMENTS_FOLDER,
 )
 from cve2stix.main import main
 
@@ -52,9 +55,15 @@ def cli():
                 start_date=data.get("start-date"),
                 end_date=data.get("end-date"),
                 cve_run_mode=data.get("cve-run-mode"),
-                cve_enrichment=data.get("cve-enrichment"),
-                cve_folder_path=data.get("cve-folder-path"),
-                cpe_folder_path=data.get("cpe-folder-path"),
+                stix2_enrichments_folder=data.get(
+                    "stix2-enrichments-folder", STIX2_ENRICHMENTS_FOLDER
+                ),
+                stix2_objects_folder=data.get(
+                    "stix2-objects-folder", STIX2_OBJECTS_FOLDER
+                ),
+                stix2_bundles_folder=data.get(
+                    "stix2-bundles-folder", STIX2_BUNDLES_FOLDER
+                ),
                 api_key=api_key,
             )
 
@@ -62,3 +71,7 @@ def cli():
             raise ValueError("Invalid yaml file")
 
     main(config)
+
+
+if __name__ == "__main__":
+    cli()

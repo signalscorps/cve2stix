@@ -2,118 +2,34 @@
 Main driver logic for cve2stix
 """
 
-import json
 import logging
 import math
 import requests
 import time
-import pytz
-import os
 from dateutil.relativedelta import relativedelta
-from stix2 import new_version
-from stix2.exceptions import InvalidValueError
 
 from cve2stix.config import Config
 from cve2stix.database import store_cves_in_database, store_cpes_in_database
 from cve2stix.enrichment import Enrichment
 from cve2stix.error_handling import store_error_logs_in_file
-from cve2stix.helper import get_date_string_nvd_format
+from cve2stix.helper import (
+    get_date_string_nvd_format,
+    store_new_cve,
+    update_existing_cve,
+)
 from cve2stix.parse_api_response import parse_cve_api_response, parse_cpe_api_response
 from cve2stix.stix_store import StixStore
 
 logger = logging.getLogger(__name__)
 
 
-def store_new_cve(stix_store: StixStore, parsed_response):
-    stix_objects = [parsed_response.vulnerability]
-    if parsed_response.indicator != None:
-        stix_objects.append(parsed_response.indicator)
-    if parsed_response.relationship != None:
-        stix_objects.append(parsed_response.relationship)
-    if parsed_response.enrichment_objects != None:
-        stix_objects += parsed_response.enrichment_objects
-
-    status = stix_store.store_cve_in_bundle(
-        parsed_response.vulnerability["name"], stix_objects
-    )
-    if status == False:
-        return False
-
-    stix_store.store_objects_in_filestore(stix_objects)
-    return True
-
-
-def update_existing_cve(existing_cve, stix_store, parsed_response):
-    stix_objects = []
-    try:
-        vulnerability_dict = json.loads(parsed_response.vulnerability.serialize())
-        vulnerability_dict.pop("type", None)
-        vulnerability_dict.pop("created", None)
-        vulnerability_dict.pop("id", None)
-        vulnerability_dict.pop("created_by_ref", None)
-        old_vulnerability = stix_store.get_object_by_id(
-            existing_cve["vulnerability"]["id"]
-        )
-        new_vulnerability = new_version(old_vulnerability, **vulnerability_dict)
-        stix_objects.append(new_vulnerability)
-
-        if parsed_response.indicator != None:
-            indicator_dict = json.loads(parsed_response.indicator.serialize())
-            indicator_dict.pop("type", None)
-            indicator_dict.pop("created", None)
-            indicator_dict.pop("id", None)
-            indicator_dict.pop("created_by_ref", None)
-
-            old_indicator = None
-            if existing_cve["indicator"] != None:
-                old_indicator = stix_store.get_object_by_id(
-                    existing_cve["indicator"]["id"]
-                )
-
-            new_indicator = parsed_response.indicator
-            if old_indicator != None:
-                new_indicator = new_version(old_indicator, **indicator_dict)
-            stix_objects.append(new_indicator)
-
-        if parsed_response.relationship != None:
-            old_relationship = None
-            if existing_cve["relationship"] != None:
-                old_relationship = stix_store.get_object_by_id(
-                    existing_cve["relationship"]["id"]
-                )
-
-            new_relationship = parsed_response.relationship
-            if old_relationship != None:
-                new_relationship = new_version(
-                    old_relationship,
-                    modified=pytz.UTC.localize(
-                        parsed_response.vulnerability["modified"]
-                    ),
-                )
-            stix_objects.append(new_relationship)
-
-        if parsed_response.enrichment_objects != None:
-            stix_objects += parsed_response.enrichment_objects
-
-        stix_store.store_objects_in_filestore(stix_objects)
-        stix_store.store_cve_in_bundle(
-            parsed_response.vulnerability["name"], stix_objects, update=True
-        )
-
-    except InvalidValueError:
-        logger.warning(
-            "Tried updating %s, whose latest copy is already downloaded. Hence skipping it",
-            parsed_response.vulnerability["name"],
-        )
-
-
 def cve_main(config: Config):
 
     cti_dataset = None
     enrichment = None
-    if config.cve_enrichments_folder != None:
+    if config.stix2_enrichments_folder != None:
         # Download/update mitre dataset
-        enrichment = Enrichment(config.cve_enrichments_folder)
+        enrichment = Enrichment(config.stix2_enrichments_folder)
         cti_dataset = enrichment.preprocess_cti_dataset()
 
     start_date = config.start_date
@@ -187,22 +103,20 @@ def cve_main(config: Config):
             total_results = content["totalResults"]
 
             # Store CVEs in database
-            cpe_stix_store = StixStore(
-                config.cpe_stix2_objects_folder, config.cpe_stix2_bundles_folder
-            )
-            store_cves_in_database(parsed_responses, cpe_stix_store)
+            # cpe_stix_store = StixStore(
+            #     config.cpe_stix2_objects_folder, config.cpe_stix2_bundles_folder
+            # )
+            # store_cves_in_database(parsed_responses, cpe_stix_store)
 
             stix_store = StixStore(
-                config.cve_stix2_objects_folder, config.cve_stix2_bundles_folder
+                config.stix2_objects_folder, config.stix2_bundles_folder
             )
             total_store_count = 0
             total_update_count = 0
 
             # Store CVEs in stix store
             for parsed_response in parsed_responses:
-                cve = stix_store.get_cve_from_bundle(
-                    parsed_response.vulnerability.name
-                )
+                cve = stix_store.get_cve_from_bundle(parsed_response.vulnerability.name)
                 if cve == None:
                     # CVE not present, so we download it
                     status = store_new_cve(
@@ -296,7 +210,7 @@ def cpe_main(config: Config):
         total_results = content["totalResults"]
 
         stix_store = StixStore(
-            config.cpe_stix2_objects_folder, config.cpe_stix2_bundles_folder
+            config.stix2_objects_folder, config.stix2_bundles_folder
         )
         total_store_count = 0
 
@@ -307,7 +221,10 @@ def cpe_main(config: Config):
             total_store_count += 1
 
         # Store CPEs in database
-        store_cpes_in_database(parsed_responses)
+        # cve_stix_store = StixStore(
+        #     config.cve_stix2_objects_folder, config.cve_stix2_bundles_folder
+        # )
+        # store_cpes_in_database(parsed_responses, cve_stix_store)
 
         logger.info(
             "Downloaded %d cpes",

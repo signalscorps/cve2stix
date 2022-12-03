@@ -9,9 +9,13 @@ import logging
 from pathlib import Path
 import os
 
-CVESTIX_FOLDER = Path(os.path.abspath(__file__)).parent
-REPO_FOLDER = CVESTIX_FOLDER.parent
+CVE2STIX_FOLDER = Path(os.path.abspath(__file__)).parent
+REPO_FOLDER = CVE2STIX_FOLDER.parent
 CREDENTIALS_FILE_PATH = REPO_FOLDER / "credentials.yml"
+
+STIX2_OBJECTS_FOLDER = REPO_FOLDER / "stix2_objects"
+STIX2_BUNDLES_FOLDER = REPO_FOLDER / "stix2_bundles"
+STIX2_ENRICHMENTS_FOLDER = REPO_FOLDER / "stix2_enrichments"
 
 logger = logging.getLogger(__name__)
 
@@ -23,9 +27,9 @@ class Config:
     end_date: datetime = datetime.now()
     cve_run_mode: str = "download"  # or "update"
     api_key: str = ""
-    cve_folder_path: str = str(REPO_FOLDER / "CVEs")
-    cpe_folder_path: str = str(REPO_FOLDER / "CPEs")
-    cve_enrichment: bool = False
+    stix2_objects_folder: str = ""
+    stix2_bundles_folder: str = ""
+    stix2_enrichments_folder: str = ""
 
     # Constant configs, SHOULD NOT be changed
     nvd_cve_api_endpoint: str = "https://services.nvd.nist.gov/rest/json/cves/1.0/"
@@ -50,29 +54,3 @@ class Config:
         if self.cve_run_mode not in ("download", "update"):
             logger.error("cve-run-mode should be one of 'download' or 'update'")
             exit(1)
-
-    @property
-    def cve_enrichments_folder(self):
-        if self.cve_enrichment == False:
-            return None
-        return os.path.join(self.cve_folder_path, "stix2_enrichments")
-    
-    @property
-    def cve_stix2_objects_folder(self):
-        return os.path.join(self.cve_folder_path, "stix2_objects")
-
-    @property
-    def cve_stix2_bundles_folder(self):
-        return os.path.join(self.cve_folder_path, "stix2_bundles")
-
-    @property
-    def cpe_stix2_objects_folder(self):
-        return os.path.join(self.cpe_folder_path, "stix2_objects")
-
-    @property
-    def cpe_stix2_bundles_folder(self):
-        return os.path.join(self.cpe_folder_path, "stix2_bundles")
-
-    @property
-    def cpe_stix2_bundles_relative_path(self):
-        return 
