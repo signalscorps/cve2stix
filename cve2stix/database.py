@@ -10,7 +10,7 @@ import logging
 import re
 
 from cve2stix.cve import CVE
-from cve2stix.helper import update_existing_cve
+from cve2stix.error_handling import error_logger
 from cve2stix.stix_store import StixStore
 
 logger = logging.getLogger(__name__)
@@ -62,7 +62,7 @@ def store_cves_in_database(parsed_responses: list[CVE], stix_store: StixStore):
                     STIX_CPE.cpe23uri.regexp(regex_cpe23Uri)
                 )
                 if cpe_instances == None or len(cpe_instances) == 0:
-                    logger.error(
+                    error_logger.error(
                         "While adding %s ref, CPE %s was not found in database",
                         parsed_response.vulnerability.name,
                         cpe23Uri,
@@ -83,7 +83,7 @@ def store_cves_in_database(parsed_responses: list[CVE], stix_store: StixStore):
                     if software != None:
                         parsed_response.softwares += [software]
                     else:
-                        logger.error(
+                        error_logger.error(
                             "While adding %s ref, CPE %s was not found in stix2_objects, even though it's present in database",
                             parsed_response.vulnerability.name,
                             cpe23Uri,
