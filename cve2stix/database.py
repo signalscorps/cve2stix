@@ -58,7 +58,6 @@ def store_cves_in_database(parsed_responses: List[CVE], stix_store: StixStore):
                 "extension-definition--b463c449-d022-48b7-b464-3e9c7ec5cf16"
             ]["all_cpe23uris"]:
                 regex_cpe23Uri = cpe23Uri.replace("*", ".*")
-                print(regex_cpe23Uri)
                 cpe_instances = STIX_CPE.select().where(
                     STIX_CPE.cpe23uri.regexp(regex_cpe23Uri)
                 )
