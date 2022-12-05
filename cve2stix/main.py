@@ -91,7 +91,7 @@ def cve_main(config: Config):
                 continue
 
             content = response.json()
-            logger.debug(
+            logger.info(
                 "Got response from NVD API with status code: %d", response.status_code
             )
 
