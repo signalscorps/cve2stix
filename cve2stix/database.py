@@ -32,13 +32,10 @@ class STIX_CPE(BaseModel):
     cpe23uri = CharField(unique=True)
     cpe_stix_id = CharField()
 
+
 # Connect to database and create database tables
 db.connect()
 db.create_tables([STIX_CVE, STIX_CPE])
-
-@db.func()
-def regexp(expr, s):
-    return re.search(expr, s) is not None
 
 # Database helper methods
 def store_cves_in_database(parsed_responses: List[CVE], stix_store: StixStore):
@@ -58,8 +55,11 @@ def store_cves_in_database(parsed_responses: List[CVE], stix_store: StixStore):
                 "extension-definition--b463c449-d022-48b7-b464-3e9c7ec5cf16"
             ]["all_cpe23uris"]:
                 regex_cpe23Uri = cpe23Uri.replace("*", ".*")
+
+                # % is short of LIKE, which is more efficient than REGEXP
+                # https://stackoverflow.com/questions/9629488/mysql-regexp-much-slow-than-like
                 cpe_instances = STIX_CPE.select().where(
-                    STIX_CPE.cpe23uri.regexp(regex_cpe23Uri)
+                    STIX_CPE.cpe23uri % regex_cpe23Uri
                 )
                 if cpe_instances == None or len(cpe_instances) == 0:
                     error_logger.error(
