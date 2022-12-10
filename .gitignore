@@ -146,3 +146,4 @@ stix2_objects/
 stix2_bundles/
 stix2_enrichments/
 state.db
+logs

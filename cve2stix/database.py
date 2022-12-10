@@ -54,13 +54,13 @@ def store_cves_in_database(parsed_responses: List[CVE], stix_store: StixStore):
             for cpe23Uri in parsed_response.indicator.extensions[
                 "extension-definition--b463c449-d022-48b7-b464-3e9c7ec5cf16"
             ]["all_cpe23uris"]:
-                regex_cpe23Uri = cpe23Uri.replace("*", ".*")
 
                 # % is short of LIKE, which is more efficient than REGEXP
                 # https://stackoverflow.com/questions/9629488/mysql-regexp-much-slow-than-like
-                cpe_instances = STIX_CPE.select().where(
-                    STIX_CPE.cpe23uri % regex_cpe23Uri
-                )
+                # But weirdy, internally peewee uses GLOB for % instead of LIKE (as documented on their website)
+                # But I am not complaining because cpe23Uri can be directly used for GLOB
+                # and GLOB seems to be much faster than LIKE and REGEXP
+                cpe_instances = STIX_CPE.select().where(STIX_CPE.cpe23uri % cpe23Uri)
                 if cpe_instances == None or len(cpe_instances) == 0:
                     error_logger.error(
                         "While adding %s ref, CPE %s was not found in database",
