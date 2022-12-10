@@ -61,7 +61,7 @@ def store_cves_in_database(parsed_responses: List[CVE], stix_store: StixStore):
                 # But I am not complaining because cpe23Uri can be directly used for GLOB
                 # and GLOB seems to be much faster than LIKE and REGEXP
                 cpe_instances = STIX_CPE.select().where(STIX_CPE.cpe23uri % cpe23Uri)
-                if cpe_instances == None or len(cpe_instances) == 0:
+                if len(cpe_instances) == 0:
                     error_logger.error(
                         "While adding %s ref, CPE %s was not found in database",
                         parsed_response.vulnerability.name,
