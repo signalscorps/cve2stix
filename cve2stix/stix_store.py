@@ -5,7 +5,7 @@ Contains logic for storing parsed stix objects.
 import json
 import os
 import logging
-from stix2 import FileSystemStore, Filter, Bundle, MemoryStore
+from stix2 import FileSystemStore, Filter, Bundle, MemoryStore, parse_observable
 from stix2.base import STIXJSONEncoder
 from stix2.datastore import DataSourceError
 
@@ -82,6 +82,18 @@ class StixStore:
             return None
 
         return observables_found[0]
+    
+    def get_object_by_id_custom(self, stix_object_id):
+        """
+        Special function for fast retrieval of objects
+        Currently used only for Software objects
+        """
+        object_type = stix_object_id.split("--")[0]
+        file_path = os.path.join(self.file_store_path, object_type, f"{stix_object_id}.json")
+        with open(file_path) as f:
+            observable = parse_observable(f)
+        return observable
+
 
     def get_object_custom_query(
         self,

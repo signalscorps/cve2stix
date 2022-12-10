@@ -79,7 +79,7 @@ def store_cves_in_database(parsed_responses: List[CVE], stix_store: StixStore):
                     ]["all_cpe23uris_refs"] += [cpe_instance.cpe_stix_id]
 
                     # Add CPE software object in CVE
-                    software = stix_store.get_object_by_id(cpe_instance.cpe_stix_id)
+                    software = stix_store.get_object_by_id_custom(cpe_instance.cpe_stix_id)
                     if software != None:
                         parsed_response.softwares += [software]
                     else:
