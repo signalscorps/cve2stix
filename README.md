@@ -40,11 +40,14 @@ Y
 
 The YML settings file has the following fields:
 
-* `earliest-cve-date`: The datetime from which CVEs are downloaded (updated)
-* `latest-cve-date`: The datetime upto which CVEs are downloaded (updated)
-* `run-mode`: Possible value "download" or "update", denoting if new CVEs are to be downloaded or existing CVEs need to be updated.
+* `type`: Possible values are "cve" and "cpe", denoting whether CVEs or CPEs is to be download, respectively.
+* `start-date`: The datetime from which CVEs/CPEs are downloaded (updated)
+* `latest-cve-date`: The datetime upto which CVEs/CPEs are downloaded (updated)
+* `cve-run-mode`: Possible value "download" or "update", denoting if new CVEs are to be downloaded or existing CVEs need to be updated. This setting is ignored if `type` is *cpe*.
 * `stix2-objects-folder`: Folder where stix2 objects will be stored.
 * `stix2-bundles-folder`: Folder where stix2 bundles are stored, grouped by CVE year and ID.
+* `stix2-enrichments-folder`: Folder where ATT&CK and CAPEC data are stored
+* `nvd_api_key`: NVD API Key
 
 [You can see a sample of the yml file schema here](download-settings.yml.schema).
 

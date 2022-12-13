@@ -10,7 +10,6 @@ import yaml
 import cve2stix
 from cve2stix.config import (
     Config,
-    CREDENTIALS_FILE_PATH,
     STIX2_OBJECTS_FOLDER,
     STIX2_BUNDLES_FOLDER,
     STIX2_ENRICHMENTS_FOLDER,
@@ -36,16 +35,6 @@ def cli():
     )
 
     args = arg_parser.parse_args()
-
-    api_key = ""
-    if os.path.exists(CREDENTIALS_FILE_PATH):
-        with open(CREDENTIALS_FILE_PATH, "r") as stream:
-            try:
-                data = yaml.safe_load(stream)
-                api_key = data["nvd_api_key"]
-            except:
-                pass
-
     with open(args.settings, "r") as stream:
         try:
             data = yaml.safe_load(stream)
@@ -64,7 +53,7 @@ def cli():
                 stix2_bundles_folder=data.get(
                     "stix2-bundles-folder", STIX2_BUNDLES_FOLDER
                 ),
-                api_key=api_key,
+                api_key=data.get("nvd_api_key"),
             )
 
         except yaml.YAMLError:

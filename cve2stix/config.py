@@ -11,7 +11,6 @@ import os
 
 CVE2STIX_FOLDER = Path(os.path.abspath(__file__)).parent
 REPO_FOLDER = CVE2STIX_FOLDER.parent
-CREDENTIALS_FILE_PATH = REPO_FOLDER / "credentials.yml"
 
 STIX2_OBJECTS_FOLDER = REPO_FOLDER / "stix2_objects"
 STIX2_BUNDLES_FOLDER = REPO_FOLDER / "stix2_bundles"
