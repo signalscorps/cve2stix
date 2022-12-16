@@ -1,11 +1,29 @@
-# See readme for details
+# See readme for full details
 
-cve-id: 
-cve-earliest-publish-date:
-cve-latest-publish-date:
-cpe-part: 
-cpe-vendor: 
-cpe-product:
-cve-cvss3-exploitabilityScore-min: 
-cve-cvss3-impactScore-min: 
-match-vulnerabilities: 
+## nvd creds
+
+nvd_api_key: # get here https://nvd.nist.gov/developers/request-an-api-key
+
+## mode
+
+run-mode: # either cpe or cve
+
+## STIX object storage
+
+stix2-objects-folder: # default is ROOT/stix2_objects
+stix2-bundles-folder: # default is ROOT/stix2_bundles
+stix2-enrichments-folder: # default is ROOT/stix2_bundles
+
+## cve / cpe filters (note, those prefixed with cve/cpe only work in the respective modes)
+
+start-date: # no default, e.g. 2020-01-01
+end-date: # no default, e.g. 2022-01-01
+
+cve-id: # no default, e.g. CVE-2021-44228
+cve-cvss3-exploitabilityScore-min: # default null, between null and 10
+cve-cvss3-impactScore-min: # default null, between null and 10
+
+cpe-uri: # no default, e.g. cpe:2.3:a:microsoft:internet_explorer:8.0.6001:beta:*:*:*:*:*:*
+cpe-part: # no default, e.g. a 
+cpe-vendor: # no default, e.g. microsoft
+cpe-product: # no default, e.g. internet_explorer
