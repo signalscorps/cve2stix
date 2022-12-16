@@ -42,7 +42,7 @@ The YML settings file has the following fields:
 
 * `type`: Possible values are "cve" and "cpe", denoting whether CVEs or CPEs is to be download, respectively.
 * `start-date`: The datetime from which CVEs/CPEs are downloaded (updated)
-* `latest-cve-date`: The datetime upto which CVEs/CPEs are downloaded (updated)
+* `end-date`: The datetime upto which CVEs/CPEs are downloaded (updated)
 * `cve-run-mode`: Possible value "download" or "update", denoting if new CVEs are to be downloaded or existing CVEs need to be updated. This setting is ignored if `type` is *cpe*.
 * `stix2-objects-folder`: Folder where stix2 objects will be stored.
 * `stix2-bundles-folder`: Folder where stix2 bundles are stored, grouped by CVE year and ID.
