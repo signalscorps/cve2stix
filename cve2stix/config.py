@@ -30,6 +30,15 @@ class Config:
     stix2_bundles_folder: str = ""
     stix2_enrichments_folder: str = ""
 
+    # Optional fields in API calls
+    cve_id:str = ""
+    cve_cvssV3_severity:str = ""
+    
+    cpe_uri: str = ""
+    cpe_part: str = ""
+    cpe_vendor: str = ""
+    cpe_product: str = ""
+
     # Constant configs, SHOULD NOT be changed
     nvd_cve_api_endpoint: str = "https://services.nvd.nist.gov/rest/json/cves/1.0/"
     nvd_cpe_api_endpoint: str = "https://services.nvd.nist.gov/rest/json/cpes/1.0/"
@@ -42,13 +51,14 @@ class Config:
             logger.error("type should be one of 'cve' or 'cpe'")
             exit(1)
 
-        if not isinstance(self.start_date, date):
-            logger.error("start-date is not in ISO format.")
-            exit(1)
+        if not self.cve_id:
+            if not isinstance(self.start_date, date):
+                logger.error("start-date is not in ISO format.")
+                exit(1)
 
-        if not isinstance(self.end_date, date):
-            logger.error("end-date is not in ISO format.")
-            exit(1)
+            if not isinstance(self.end_date, date):
+                logger.error("end-date is not in ISO format.")
+                exit(1)
 
         if self.cve_run_mode not in ("download", "update"):
             logger.error("cve-run-mode should be one of 'download' or 'update'")

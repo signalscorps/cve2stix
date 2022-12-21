@@ -20,8 +20,7 @@ start-date: # no default, e.g. 2020-01-01
 end-date: # no default, e.g. 2022-01-01
 
 cve-id: # no default, e.g. CVE-2021-44228
-cve-cvss3-exploitabilityScore-min: # default null, between null and 10
-cve-cvss3-impactScore-min: # default null, between null and 10
+cve-cvssV3-severity: # no default, takes value "LOW", "MEDIUM", "HIGH" and "CRITICAL"
 
 cpe-uri: # no default, e.g. cpe:2.3:a:microsoft:internet_explorer:8.0.6001:beta:*:*:*:*:*:*
 cpe-part: # no default, e.g. a 

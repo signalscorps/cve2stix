@@ -14,7 +14,7 @@ logger = logging.getLogger(__name__)
 
 
 def get_date_string_nvd_format(date):
-    return date.strftime("%Y-%m-%dT%H:%M:%S:%f")[:-3] + " Z"
+    return date.strftime("%Y-%m-%dT%H:%M:%S:%f")[:-3] + " UTC"
 
 
 def store_new_cve(stix_store, parsed_response: CVE):

@@ -68,10 +68,13 @@ def cve_main(config: Config):
             if config.cve_run_mode == "download":
                 query["pubStartDate"] = get_date_string_nvd_format(start_date)
                 query["pubEndDate"] = get_date_string_nvd_format(end_date)
-            else:
+            elif config.cve_run_mode == "update":
                 query["modStartDate"] = get_date_string_nvd_format(start_date)
                 query["modEndDate"] = get_date_string_nvd_format(end_date)
                 query["includeMatchStringChange"] = True
+
+            if config.cve_cvssV3_severity:
+                query["cvssV3Severity"] = config.cve_cvssV3_severity
 
             try:
 
@@ -139,6 +142,11 @@ def cve_main(config: Config):
                 time.sleep(5)
 
             backoff_time = 10
+
+        # If start_date is None, then break after one iteration
+        if start_date == None:
+            break
+
         start_date = end_date
 
         if start_date < config.end_date:
@@ -207,9 +215,7 @@ def cpe_main(config: Config):
 
         total_results = content["totalResults"]
 
-        stix_store = StixStore(
-            config.stix2_objects_folder, config.stix2_bundles_folder
-        )
+        stix_store = StixStore(config.stix2_objects_folder, config.stix2_bundles_folder)
         # Store CPEs in database
         store_cpes_in_database(parsed_responses, stix_store)
 

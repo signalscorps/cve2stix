@@ -53,7 +53,13 @@ def cli():
                 stix2_bundles_folder=data.get(
                     "stix2-bundles-folder", STIX2_BUNDLES_FOLDER
                 ),
-                api_key=data.get("nvd_api_key"),
+                api_key=data.get("nvd-api-key"),
+                cve_id=data.get("cve-id"),
+                cve_cvssV3_severity=data.get("cve-cvssV3-severity"),
+                cpe_uri=data.get("cpe-uri"),
+                cpe_part=data.get("cpe-part"),
+                cpe_vendor=data.get("cpe-vendor"),
+                cpe_product=data.get("cpe-product"),
             )
 
         except yaml.YAMLError:
