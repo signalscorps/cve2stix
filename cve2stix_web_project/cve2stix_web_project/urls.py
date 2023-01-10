@@ -22,6 +22,7 @@ from cve2stix_api import views
 urlpatterns = [
     path("admin/", admin.site.urls),
     path('objects/', views.CVEList.as_view()),
+    path('objects/<cve_id>/', views.CVEDetail.as_view()),
 ]
 
 urlpatterns = format_suffix_patterns(urlpatterns)
