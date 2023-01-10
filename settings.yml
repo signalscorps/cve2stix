@@ -1,7 +1,7 @@
 
 type: cve
 start-date: 2018-04-17
-end-date: 2018-04-19
+end-date: 2018-04-18
 cve-run-mode: "download"
 stix2-objects-folder: "stix2_objects"
 stix2-bundles-folder: "stix2_bundles"

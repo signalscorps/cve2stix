@@ -5,8 +5,10 @@ Main driver logic for cve2stix
 import logging
 import math
 import requests
+from requests.auth import HTTPBasicAuth
 import time
 from dateutil.relativedelta import relativedelta
+import json
 
 from cve2stix.config import Config
 from cve2stix.database import store_cves_in_database, store_cpes_in_database
@@ -118,6 +120,23 @@ def cve_main(config: Config):
             # Store CVEs in stix store
             for parsed_response in parsed_responses:
                 cve = stix_store.get_cve_from_bundle(parsed_response.vulnerability.name)
+
+                vulnerability_json = json.loads(cve.vulnerability.serialize())
+
+                data = {
+                    "cve_id": vulnerability_json.get("name"),
+                    "created": vulnerability_json.get("created"),
+                    "modified": vulnerability_json.get("modified"),
+                    "vulnerability": vulnerability_json,
+                }
+
+                # Add in web api database
+                api_response = requests.post(
+                    "http://127.0.0.1:8000/objects/",
+                    auth=HTTPBasicAuth("cve2stix_admin", "password"),
+                    json=data,
+                )
+
                 if cve == None:
                     # CVE not present, so we download it
                     status = store_new_cve(
