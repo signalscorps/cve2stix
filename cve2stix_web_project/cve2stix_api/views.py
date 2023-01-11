@@ -9,20 +9,26 @@ from rest_framework import permissions
 
 class CVEList(APIView):
     """
-    List all CVEs, or create a CVE
+    List all CVE STIX Objects, or create a CVE STIX Object
     """
+    serializer_class = CVESerializer
     permission_classes = [permissions.IsAuthenticated]
 
-    def get(self, request, format=None):
+    def get(self, request):
+        """
+        List all CVE STIX Objects
+        """
         cves = CVE.objects.all()
         serializer = CVESerializer(cves, many=True)
         return Response(serializer.data)
     
-    def post(self, request, format=None):
+    def post(self, request):
+        """
+        Create a new CVE STIX Object
+        """
         try:
             serializer = CVESerializer(data=request.data)
             if serializer.is_valid():
-                serializer.save(owner=self.request.user)
                 return Response(serializer.data, status=status.HTTP_201_CREATED)
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         except Exception as ex:
@@ -31,8 +37,11 @@ class CVEList(APIView):
 
 class CVEDetail(APIView):
     """
-    Retrieve, update or delete an existing CVE
+    Retrieve, update or delete an existing CVE STIX Object
     """
+    serializer_class = CVESerializer
+    permission_classes = [permissions.IsAuthenticated]
+
 
     def get_cve_object(self, cve_id):
         try:
@@ -40,12 +49,18 @@ class CVEDetail(APIView):
         except CVE.DoesNotExist:
             raise Http404
     
-    def get(self, request, cve_id, format=None):
+    def get(self, request, cve_id: str):
+        """
+        Retrieve an existing CVE STIX Object
+        """
         cve = self.get_cve_object(cve_id)
         serializer = CVESerializer(cve)
         return Response(serializer.data)
 
-    def put(self, request, cve_id, format=None):
+    def put(self, request, cve_id: str):
+        """
+        Update an existing CVE STIX Object
+        """
         cve = self.get_cve_object(cve_id)
         serializer = CVESerializer(cve, data=request.data)
         if serializer.is_valid():
@@ -53,7 +68,10 @@ class CVEDetail(APIView):
             return Response(serializer.data)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-    def delete(self, request, cve_id, format=None):
+    def delete(self, request, cve_id: str):
+        """
+        Delete an existing CVE STIX Object
+        """
         snippet = self.get_cve_object(cve_id)
         snippet.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)

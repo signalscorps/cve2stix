@@ -1,0 +1,5 @@
+Django==4.1.5
+djangorestframework==3.14.0
+psycopg2==2.9.5
+drf-spectacular==0.25.1
+drf-spectacular[sidecar]==0.25.1

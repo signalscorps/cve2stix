@@ -6,5 +6,4 @@ class CVE(models.Model):
     created = models.DateTimeField()
     modified = models.DateTimeField()
     vulnerability = models.JSONField()
-
-    owner = models.ForeignKey("auth.User", related_name="cves", on_delete=models.CASCADE)
+    
